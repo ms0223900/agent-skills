@@ -1,0 +1,181 @@
+---
+name: vue-integration-test
+description: Guides writing Vue 2 component integration tests with @vue/test-utils + Jest + Vuex. Covers mock store factories, heavy-child stubbing via `jest.mock` + `stubs`, DOM + computed dual-layer assertions, and mutation-test self-check. Use when the user wants to add `.integration.test.js` for a Vue component, test rendered output against fixtures, or verify store-driven render paths.
+---
+
+# Vue 2 Integration Test Workflow
+
+本專案 Vue 2 + Vuex 元件整合測試的撰寫指南，沿用本專案既有參考（`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`、`feature/SPRD-660` 分支之 `SPRD-660-high-precision.integration.test.js`）與 [@vue/test-utils v1 best practices](https://v1.test-utils.vuejs.org/)。
+
+## 何時使用
+
+- 使用者要求為某個 Vue 元件寫「整合測試」、「渲染測試」、「component integration test」。
+- 想驗證 store → computed → DOM 的完整資料流。
+- 要把單元測試（pure function）升級成對元件實際渲染行為的斷言。
+- **不適用**：純函式／utils 測試（直接寫 unit test）、E2E／瀏覽器行為測試（用 Cypress／Playwright）。
+
+## 流程
+
+### 1. 釐清測試目標
+
+- 要測哪個元件（路徑＋計算屬性／分支）？
+- 要覆蓋哪些情境？（對應 fixture 或 user story 的 Scenario）
+- 斷言哪幾層？
+  - **Computed 層**：直接讀 `wrapper.vm.xxx` — 穩定、易斷言，但偏實作細節。
+  - **DOM 層**：`wrapper.findAll('.some-class').length` 或 `wrapper.text()` — 最接近使用者實際看到的結果。
+  - **建議**：重要情境兩層都斷言，互為交叉驗證。
+
+### 2. 命名與檔案位置
+
+- 路徑：`tests/unit/components/<元件名稱>/<JIRA-單號>-<簡述>.integration.test.js`
+- 範例：`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`
+- Fixture 獨立放 `tests/unit/__fixtures__/<feature>/*.json`，以 JSON 定義 `input` 與 `expected`，方便機讀比對。
+
+### 3. 檔案骨架（照以下順序撰寫）
+
+```js
+/**
+ * <JIRA>：<功能簡述> — <Component>.vue 元件層整合測試
+ *
+ * 覆蓋：<具體分支／computed> (<檔案>:<行號>)
+ *       與 DOM 輸出 (<DOM 選擇器>) 是否與 fixture 對齊。
+ * 情境：Scenario 1（...）、Scenario 2（...）
+ */
+
+// 1. 先 preemptive mock 重量級／transitive 匯入的子元件，避免 jest 轉檔炸鍋
+jest.mock('@/components/Heavy/HeavyIndex', () => ({ __esModule: true, default: {} }));
+jest.mock('@/components/NoisyChild', () => ({
+  __esModule: true,
+  default: { name: 'NoisyChild', render: () => null },
+}));
+
+// 2. imports
+import { createLocalVue, mount } from '@vue/test-utils';
+import Vue from 'vue';
+import Vuex from 'vuex';
+import Target from '@/components/Target.vue';
+import fixtureA from '../../__fixtures__/<feature>/scenario-a.json';
+
+// 3. localVue 設定（Vuex + 自訂 directive）
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.directive('loading', { bind() {}, update() {} });
+
+// 4. Fixture builder — 把最小 payload 包成元件期望的 shape
+function buildStorePayload(input) { /* ... */ }
+
+// 5. Mock store factory — 只填目標元件實際讀到的 state／getters
+function createMockRootStore(payload) {
+  return new Vuex.Store({
+    getters: { /* 根 getters */ },
+    modules: {
+      ModuleA: { namespaced: true, state: { /* ... */ } },
+      // ...
+    },
+  });
+}
+
+// 6. Mount helper — 集中 mocks／stubs，方便所有 it 重複使用
+function mountTarget(input) {
+  const store = createMockRootStore(buildStorePayload(input));
+  return mount(Target, {
+    localVue,
+    store,
+    mocks: {
+      $SportLib: { /* 只 stub 實際被呼叫的方法 */ },
+    },
+    stubs: {
+      Odd: true,
+      // 列出所有會渲染但與本測試無關的子元件
+    },
+  });
+}
+
+// 7. Post-mount helper — 處理必要的 data 設定 + nextTick
+async function mountAndSetup(input) {
+  const wrapper = mountTarget(input);
+  wrapper.setData({ selectKey: 'main' }); // 若 template v-for 依賴 data
+  await Vue.nextTick();
+  return wrapper;
+}
+
+// 8. Assertion helpers — 把取值邏輯收斂，降低重複
+const toIDs = (wrapper) => wrapper.vm.SomeComputed.map(x => x.id);
+const toDomCount = (wrapper) => wrapper.findAll('.target-row').length;
+
+// 9. describe 結構對齊 fixture／Scenario
+describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
+  describe('Scenario 1 — ...', () => {
+    it('computed 層順序與 expected 一致', async () => {
+      const wrapper = await mountAndSetup(fixtureA.input);
+      expect(toIDs(wrapper)).toEqual(fixtureA.expected.order);
+    });
+    it('DOM 層渲染數量對應 expected', async () => {
+      const wrapper = await mountAndSetup(fixtureA.input);
+      expect(toDomCount(wrapper)).toBe(fixtureA.expected.order.length);
+    });
+  });
+});
+```
+
+### 4. Mock store 要點
+
+- **只塞元件實際讀到的欄位**。方法：`grep -n 'this\.\$store\.state\.'` 與 `mapState\|mapGetters` 找出依賴。
+- 每個 module 設定 `namespaced: true`（若專案慣例是 namespaced store）。
+- 若元件會 `commit` mutation：填入空函式 `mutations: { xxx() {} }`；若 `dispatch` action：填 `actions: { xxx: () => Promise.resolve() }`。
+- 根 getter 用 `getters: { userOddsAdjustment: () => 0 }`。
+- 若 store 邏輯本身是待測對象（例如測 `setGameList` mutation + 元件渲染貫通），改為 `import` 真實 module 並 `new Vuex.Store({ modules: { RealModule } })`。
+
+### 5. Mocks / Stubs 策略
+
+- `mocks`：覆寫 Vue prototype 上的全域（`$SportLib`、`$t`、`$lib`、`$conf`、`$router`、`$route`）。`$t` 通常已在 `tests/unit/setup.js` 全域處理。
+- `stubs`：
+  - `{ ChildName: true }` — 渲染為空 tag，最輕量。
+  - `{ ChildName: { template: '<div />' } }` — 需要 slot 或 prop 互動時。
+  - `jest.mock` — 模組層級 mock，用在 **transitive 匯入會炸** 的情況（例如 LiveBoardIndex 匯入一串 SVG/子元件）。
+- 優先順序：能 `stubs: true` 就不要 `jest.mock`；必要時才升級到 module mock。
+
+### 6. 斷言撰寫建議（@vue/test-utils best practices）
+
+- 以「使用者可觀察的行為」為主：`wrapper.text()`、`findAll('.selector').length`、`.attributes()`、`.classes()`、`.emitted()`。
+- 避免斷言 implementation detail（如 `vm` 內部方法名），除非測試就是為了鎖定該 computed 的行為。
+- **Selector 選擇**：
+  - 穩定：`data-testid`（推薦新增）、角色語意 class、元件 stub 名 `findComponent({ name: 'X' })`。
+  - 易碎：動態 class、CSS 模組化 hash、index-based 存取。
+- **非同步更新**：`setData`／`setProps`／`trigger` 後一律 `await Vue.nextTick()`（或 `await wrapper.vm.$nextTick()`）；若涉及多層響應，再加一次 tick 或改用 `flush-promises`。
+- **快照測試**：整合測試**不建議**用 `toMatchSnapshot`（快照 diff 太大難審視）。優先用顯式斷言。
+
+### 7. 常見陷阱
+
+1. **上游 `v-if` 阻擋 DOM**：DOM 斷言回 0 時，先在 template 沿著 `v-if` 往外找守門條件（如 `teamData.EvtStatus === 1`），補齊 fixture。
+2. **Namespaced vs non-namespaced**：store 模組設定不一致會導致 `mapState` 找不到值；對照來源元件設定。
+3. **重複建構 store**：每個 `it` 都建一個新 store，避免前一個測試汙染後面。
+4. **Jest 解析 `@/`**：確認 `jest.config.js` 有 `moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' }`。
+5. **Vue transition／teleport**：真正的 transition 會讓斷言非同步，必要時 stub。
+6. **`mount` vs `shallowMount`**：整合測試幾乎都要 `mount`（才能確認子樹渲染）；`shallowMount` 適合不 care 子元件的純邏輯測試。
+
+### 8. Mutation Test（自我驗證）
+
+完成綠燈後，**把被測的核心邏輯反向破壞一次**（例如把排序改成升序），確認測試會紅。這步證明測試是在綁定邏輯而非 fixture 本身。改完記得還原並再跑一次確認回綠。
+
+### 9. 執行與整合
+
+- 單跑：`npx jest <測試檔路徑> --no-coverage`
+- 全 suite：`npx jest --no-coverage`
+- Watch：`npx jest --watch`
+- 若要 lint：`npx eslint <測試檔路徑>`
+
+## 產出時的溝通
+
+1. 先說明：要覆蓋的元件路徑、情境、斷言層。
+2. 快速探 template（上游 `v-if`）與元件依賴（`$store.state.*`、`mapState`、`$SportLib` 等），決定 mock 範圍。
+3. 寫 test → 跑 → 依失敗訊息補 fixture 欄位（常見：`EvtStatus`、`Noshow`、`Status`）。
+4. 綠燈後做一次 mutation test 驗證，再還原。
+5. 最後回報：測試檔位置、通過數、mutation test 結果、發現的關鍵門檻（供其他測試撰寫者參考）。
+
+## 參考實例
+
+- `tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js` — MoreGame.vue 棒球排序，雙層斷言。
+- `feature/SPRD-660` 分支 `tests/unit/components/bet/SPRD-660-high-precision.integration.test.js` — BetViewList／ListCardItem／StrayCount 高精度計算，factory + stubs pattern。
+- `tests/unit/__fixtures__/baseball-sorting/` — JSON fixture 結構範例。
+- [@vue/test-utils v1 文件](https://v1.test-utils.vuejs.org/)。
