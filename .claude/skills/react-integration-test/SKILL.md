@@ -21,7 +21,7 @@ description: Guides writing React / Next.js component tests with React Testing L
 
 - 測哪個元件（路徑＋要覆蓋的 props/互動分支）？
 - 覆蓋哪些情境？對應 fixture 或 user story 的 Scenario。
-- **核心原則：測行為，不測實作**——斷言使用者看得到/做得到的事（畫面文字、可互動元素、`.emitted()` 對應的 callback 是否被呼叫），不斷言元件內部 state、hook 回傳值本身、或私有方法。
+- **核心原則：測行為，不測實作**——斷言使用者看得到/做得到的事（畫面文字、可互動元素，或傳入 `vi.fn()`／`jest.fn()` callback 後其是否以正確資料被呼叫），不斷言元件內部 state、hook 回傳值本身、或私有方法。
 - 不要用「能不能整個重寫實作、輸入輸出不變、卻完全不用改這支測試」當標準——若答案是不能，代表測到了實作細節。
 
 ### 2. 命名與檔案位置
