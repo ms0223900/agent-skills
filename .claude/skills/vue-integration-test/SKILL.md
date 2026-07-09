@@ -12,7 +12,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 - 使用者要求為某個 Vue 元件寫「整合測試」、「渲染測試」、「component integration test」。
 - 想驗證 store → computed → DOM 的完整資料流。
 - 要把單元測試（pure function）升級成對元件實際渲染行為的斷言。
-- **不適用**：純函式／utils 測試（直接寫 unit test）、E2E／瀏覽器行為測試（用 Cypress／Playwright）。
+- **不適用**：純函式／utils／composable 測試（用 `unit-test`）、E2E／瀏覽器行為測試（用 `e2e-test`）、React/Next 元件（用 `react-integration-test`）。
 
 ## 流程
 
