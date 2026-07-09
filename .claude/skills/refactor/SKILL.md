@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: Guides code refactoring (feature, style, architecture) by assessing scope, planning large changes, and applying SOLID, Clean Code, and Clean Architecture principles. Use when refactoring features, restructuring code, reorganizing architecture, cleaning up styles, extracting components, or improving maintainability.
+description: Guides code refactoring (feature, style, architecture) by assessing scope, planning large changes, and applying SOLID, Clean Code, and Clean Architecture principles. Works across Vue, Nuxt, Next.js, and other frontend stacks. Use when refactoring features, restructuring code, reorganizing architecture, cleaning up styles, extracting components, or improving maintainability.
 ---
 
 # Refactor Workflow
@@ -12,12 +12,33 @@ description: Guides code refactoring (feature, style, architecture) by assessing
 ## When to Use / 使用時機
 
 - 使用者要求 **refactor**、**重構**、**重寫** 某段程式
-- **功能重構**：拆分大組件、抽取共用邏輯、簡化複雜 methods
-- **樣式重構**：整理 SCSS、統一變數與 mixin、修正 BEM 或 scoped 問題
-- **架構整理**：調整目錄、Vuex 模組拆分、API 與業務邏輯分層
+- **功能重構**：拆分大組件、抽取共用邏輯、簡化複雜 handlers
+- **樣式重構**：整理 SCSS/CSS、統一變數與 mixin、修正 BEM 或 scoped/module 問題
+- **架構整理**：調整目錄、狀態模組拆分、API 與業務邏輯分層
 - **可維護性改善**：消除重複程式碼、提升可讀性、降低耦合
 
 **何時不套用本 skill**：純 bug fix、單行 typo、新增功能（應使用 feature skill）。
+
+---
+
+## 技術棧偵測（Step 0）
+
+套用本 skill 前，先判定目標專案技術棧：
+
+1. 讀 `package.json` dependencies（`vue`、`nuxt`、`next`、`react`、狀態庫等）
+2. 讀 `AGENTS.md` / `CLAUDE.md`（若存在）
+3. 檢查框架設定：`nuxt.config.*`、`next.config.*`、`vite.config.*`、`vue.config.js`
+4. 將結果記在內部上下文，再套用下方框架對照 overlay；**優先遵守專案既有規範與同目錄既有 pattern**，無文件時才用偵測到的框架預設慣例
+
+| 抽象概念 | Vue 2 | Nuxt 3 | Next.js (App Router) |
+|----------|-------|--------|----------------------|
+| 元件狀態 | Options `data`/`computed`/`watch` | Composition `ref`/`computed`/`watch` | hooks / `useState` |
+| 全域狀態 | Vuex | Pinia | Zustand / Redux / server state |
+| 條件渲染 | `v-if` / `v-show` | 同左 | `{cond && …}` / early return |
+| 路由與守衛 | vue-router | Nuxt routes / middleware | App Router / middleware |
+| 共用邏輯 | mixins | composables | hooks / shared modules |
+| 卸載清理 | `beforeDestroy` / `destroyed` | `onUnmounted` | `useEffect` cleanup |
+| i18n | vue-i18n `$t` | `@nuxtjs/i18n` | `next-intl` 等（依專案） |
 
 ---
 
@@ -29,9 +50,9 @@ description: Guides code refactoring (feature, style, architecture) by assessing
 
 | 類型 | 典型目標 | 常影響範圍 |
 |------|----------|------------|
-| **Feature** | 拆分組件、抽取邏輯、簡化流程 | `.vue`、`store/`、`api/` |
-| **Style** | 變數統一、BEM 調整、scoped 修正 | `*.scss`、`*.vue` 內 `<style>`、`assets/sass/` |
-| **Architecture** | 模組邊界、依賴方向、分層 | 跨目錄、`store/`、`api/`、`views/` |
+| **Feature** | 拆分組件、抽取邏輯、簡化流程 | UI 元件檔、`store/`/`stores/`、`api/` |
+| **Style** | 變數統一、BEM 調整、scoped/module 修正 | `*.scss`、`*.css`、元件內 `<style>`、`assets/` |
+| **Architecture** | 模組邊界、依賴方向、分層 | 跨目錄、狀態模組、`api/`、`views/`/`pages/`/`app/` |
 
 依以下標準粗分 **Small / Medium / Large**：
 
@@ -54,36 +75,35 @@ description: Guides code refactoring (feature, style, architecture) by assessing
 
 重構前必讀：
 
-- `AGENTS.md`（專案根目錄：技術棧、Vue 2 Options API、Vuex、國際化）
-- `.cursor/rules/vue-best-practices.mdc`
-- `.cursor/rules/style-and-scss.mdc`
-- `.eslintrc.js`
+- `AGENTS.md` / `CLAUDE.md`（專案根目錄：技術棧、慣例、國際化）
+- `.cursor/rules/` 下與偵測棧相關的 rules（若存在，如 `vue-best-practices.mdc`、`style-and-scss.mdc`）
+- `.eslintrc.js` 或 `eslint.config.*`
 
-確認專案目錄慣例：`src/views/`、`src/components/`、`src/store/`、`src/assets/`。
+確認專案目錄慣例：讀取同類型既有檔案所在目錄（如 `src/components/`、`pages/`、`app/`、`store/`、`stores/`）。
 
 ### Step 4: 依類型套用原則 / Apply by Type
 
 #### Feature 重構
 
-- **單一職責**：組件只做一件事；過大則拆成子組件或使用 mixins，維持 Vue 2 Options API
+- **單一職責**：組件只做一件事；過大則拆成子組件，共用邏輯依棧抽取為 composable / hook / mixin
 - **依賴方向**：View → Store/API，不反向；避免組件直接依賴其他組件內部實作
-- **Props / Events**：明確型別、validator；自訂事件用 kebab-case
-- **避免**：`v-if`+`v-for` 同元素、在 `created` 與 `watch` 重複呼叫、模板內複雜表達式
+- **Props / Events / Callbacks**：明確型別；Vue 自訂事件用 kebab-case；React 用 callback props
+- **避免**：條件渲染與列表遍歷寫在同一元素、lifecycle/effect 重複呼叫、模板/JSX 內複雜表達式
 - 詳見 [reference.md](reference.md) 的 Feature 章節
 
 #### Style 重構
 
-- **scoped**：組件 `<style>` 必須 `scoped`，`lang="scss"`
-- **變數**：複用 `@/assets/sass` 變數；顏色、間距具語意命名
+- **作用域**：依專案慣例使用 scoped、CSS modules 或 styled 方案
+- **變數**：複用專案既有 theme/SCSS 變數；顏色、間距具語意命名
 - **BEM-like**：Block、Element（`__`）、Modifier（`--`）；避免過深巢狀
 - **Magic numbers**：避免未解釋數字；必要時用註解說明
 - 詳見 [reference.md](reference.md) 的 Style 章節
 
 #### Architecture 重構
 
-- **分層**：UI（View/Component）→ 業務邏輯（Store action、computed）→ 資料存取（API）
-- **Vuex**：僅用 mutations 改 state；組件只 dispatch actions；非同步只放 actions
-- **API**：透過 axios 實例；錯誤處理用 try/catch，考慮 Datadog RUM 埋點
+- **分層**：UI（View/Component）→ 業務邏輯（store actions、computed/hooks）→ 資料存取（API）
+- **狀態模組**：依偵測棧套用慣例（Vuex：mutations 改 state；Pinia：actions；Zustand/Redux：依專案 pattern）
+- **API**：透過專案既有 HTTP client；錯誤處理用 try/catch，考慮 observability 埋點
 - 詳見 [reference.md](reference.md) 的 Architecture 章節
 
 ### Step 5: SOLID / Clean Code 速查
@@ -114,27 +134,27 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 
 - [ ] 重構類型與範圍已評估（Small/Medium/Large）
 - [ ] 若 Medium/Large，已產出 Plan 或與使用者確認切分
-- [ ] 符合 AGENTS.md：Vue 2 Options API、scoped、vue-i18n、decimal.js/papaparse 等
-- [ ] Vue：`v-for` 有穩定 `:key`、props 有型別/validator、模板無複雜表達式
-- [ ] Vuex：只透過 mutations 更新 state、組件只 dispatch actions
-- [ ] Style：scoped、SCSS 變數複用、BEM-like、無未解釋 magic numbers
+- [ ] 符合偵測到的技術棧慣例與 `AGENTS.md`（樣式作用域、i18n、專案工具庫等）
+- [ ] UI：列表有穩定 key、props 有型別、模板/JSX 無複雜表達式
+- [ ] 狀態：依棧慣例更新 state（Vuex mutations / Pinia actions / Zustand set 等）
+- [ ] Style：作用域正確、變數複用、BEM-like、無未解釋 magic numbers
 - [ ] ESLint 通過、ReadLints 無新增錯誤
 
 ---
 
 ## Examples / 範例
 
-**「幫我重構 GameCollapse.vue，拆成小一點的組件」**
+**「幫我重構 GameCollapse 組件，拆成小一點的組件」**
 
 → 辨識為 Feature 重構、可能 Medium；先快速檢視檔案結構，若行數/職責過多，進 Plan 模式提出拆分方案與子組件清單，再分批實作。
 
 **「把這個頁面的 style 整理成用專案變數」**
 
-→ 辨識為 Style 重構、通常 Small；直接讀取 `assets/sass` 變數，替換 hardcode，並明確 scoped、BEM 是否符規。
+→ 辨識為 Style 重構、通常 Small；直接讀取專案 theme/SCSS 變數，替換 hardcode，並確認作用域與 BEM 是否符規。
 
-**「Vuex Game 模組太大，想拆成多個子模組」**
+**「Game 狀態模組太大，想拆成多個子模組」**
 
-→ 辨識為 Architecture 重構、Large；必須先 Plan：分析 state/actions/mutations 邊界、命名空間、依賴關係，產出拆分步驟與風險，再請使用者確認第一階段範圍。
+→ 辨識為 Architecture 重構、Large；必須先 Plan：分析 state/actions 邊界、命名空間、依賴關係，產出拆分步驟與風險，再請使用者確認第一階段範圍。
 
 ---
 

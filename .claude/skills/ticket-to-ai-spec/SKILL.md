@@ -173,7 +173,7 @@ Given [前置條件] When [使用者進行某個動作或系統發生某事件] 
 
 1. **開發實作時應注意 (Implementation-time Concerns)**:
    - 階段：**Dev / Code Review**。
-   - 定義：開發者在實作本 Story 時必須主動處理或檢查的技術細節（例如：Element-UI 組件覆蓋、icon 對齊、特定 CSS 規則）。
+   - 定義：開發者在實作本 Story 時必須主動處理或檢查的技術細節（例如：UI 元件庫樣式覆蓋、icon 對齊、特定 CSS 規則）。
 2. **規格與需求灰區 (Spec-level Gaps / Pre-dev Questions)**:
    - 階段：**Grooming / Spec Review**。
    - 定義：規格本身尚未定義清楚，需在開發前先詢問 PM/UX/架構師取得答案（例如：Typography 階層、跨頁面一致性、效能指標）。

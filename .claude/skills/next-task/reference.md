@@ -165,13 +165,13 @@ Branch：`feature/SPRD-1336`。
 - 依賴圖：P0-A、P0-B、P0-C、P1-A、P1-B 均為根節點（無上游）。
 - 走訪：P0-A 未完成、無前置 → 候選。Cross-check 任務檔本身尚無「驗收說明」→ 確認為下一個任務：**P0-A 折疊展開行為測試**。
 
-實際執行：分類為純測試任務（標題含「測試」、不含「提取/重構/拆分/搬移」）→ 分派 `/vue-integration-test` → 產出 `tests/unit/components/MoreGame/SPRD-1336-render-collapse-expand.unit.test.ts` → `npx jest tests/unit/components/MoreGame --no-coverage`（231 通過，無迴歸）→ 驗收判定 PASS ✅ → 任務檔案「驗收條件」全部 `[x]` 並寫入「驗收說明」→ README 全域 Checklist 的 P0-A 行由 `[ ]` 回填為 `[x]`。
+實際執行：分類為純測試任務（標題含「測試」、不含「提取/重構/拆分/搬移」）→ 偵測為 Vue 2 專案 → 分派 `/vue-integration-test` → 產出 `tests/unit/components/MoreGame/SPRD-1336-render-collapse-expand.unit.test.ts` → `npx jest tests/unit/components/MoreGame --no-coverage`（231 通過，無迴歸）→ 驗收判定 PASS ✅ → 任務檔案「驗收條件」全部 `[x]` 並寫入「驗收說明」→ README 全域 Checklist 的 P0-A 行由 `[ ]` 回填為 `[x]`。
 
 ### Step 3（找下一個任務）——第二輪（下次呼叫本 skill 時預期的結果）
 
 - 全域 Checklist：P0-A 已 `[x]`，其餘仍 `[ ]`。
 - 走訪：P0-B（順序 2）未完成、無前置依賴 → 候選。Cross-check 對應任務檔尚無「驗收說明」→ 確認為下一個任務：**P0-B 下注 Payload 整合測試**。
-- 分類：標題含「測試」、不含「提取/重構/拆分/搬移」→ 純測試任務 → 分派 `/vue-integration-test`。
+- 分類：標題含「測試」、不含「提取/重構/拆分/搬移」→ 純測試任務 → 若為 Vue 2 元件整合測試則分派 `/vue-integration-test`；非 Vue 2 則依專案既有測試慣例撰寫。
 
 ---
 

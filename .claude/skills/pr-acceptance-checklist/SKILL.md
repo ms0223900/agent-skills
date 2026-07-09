@@ -166,7 +166,7 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 實際輸出時，請：
 
 - **用專案實際 story 編號與簡述替換 `US-XXX` / `Story A`**。
-- 將已由靜態分析「幾乎可以確定已滿足」的項目，附上說明（例如「從 `ListCardItem.vue` 的 diff 可見按鈕 DOM 與事件皆已刪除」）。
+- 將已由靜態分析「幾乎可以確定已滿足」的項目，附上說明（例如「從 `ListCardItem` 元件的 diff 可見按鈕 DOM 與事件皆已刪除」）。
 
 ---
 
@@ -177,7 +177,7 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 輸出中應包含：
 
 - **Potential Risks / 可能風險**
-  - 例如：「`OddsHistory.vue` 雖然入口已被移除，但若有人直接敲 URL 仍會進入空圖表頁面，產品需決定是否接受。」
+  - 例如：「`OddsHistory` 頁面雖然入口已被移除，但若有人直接敲 URL 仍會進入空圖表頁面，產品需決定是否接受。」
   - 例如：「此變更移除了 `/GameInfo/GameInfoLog` API 呼叫，若後端仍被其它入口使用，需再確認是否完全停用。」
 - **Recommended Manual Test Scenarios / 建議手動測試情境**
   - 以 Given/When/Then 或簡短條列，直接從 user stories 的 AC 衍生，用實際頁面名稱 / 按鈕名描述。
@@ -208,7 +208,7 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 ### PR / MR Acceptance Checklist (Example)
 
 - **Scope & Files**
-  - [x] 變更集中在購物車相關 component (`ListCardItem.vue` / `.scss`)、對應 API (`api/game.js`) 與相關 view (`OddsHistory.vue`)、版本號設定 (`config/index.js`)。
+  - [x] 變更集中在購物車相關 component（`ListCardItem` / `.scss`）、對應 API (`api/game.js`) 與相關 view (`OddsHistory`)、版本號設定 (`config/index.js`)。
   - [x] 無修改到與購物車無關的其它頁面或服務。
 
 - **User Story Alignment**
