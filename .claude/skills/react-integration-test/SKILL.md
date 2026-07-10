@@ -132,6 +132,10 @@ describe('<Component> 渲染整合測試', () => {
 
 ### 11. 執行與整合
 
+**若這是 TDD 測試準備任務**（測試策略為 Test-First，且被明確告知「這是測試準備任務，預期紅燈」）：只需跑一次，確認是因對應功能/元件尚未實作而失敗（而非測試本身寫錯），即完成任務，**不要**呼叫 `/fix`、**不要**動手把對應功能實作出來。
+
+**一般情境**：
+
 - 單跑：`npx jest <測試檔路徑> --no-coverage` 或 `npx vitest run <測試檔路徑>`（依專案偵測到的 runner）
 - 全 suite：`npx jest --no-coverage` / `npx vitest run`
 - 若要 lint：`npx eslint <測試檔路徑>`

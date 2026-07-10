@@ -1,6 +1,6 @@
 ---
 name: refactor
-description: Guides code refactoring (feature, style, architecture) by assessing scope, planning large changes, and applying SOLID, Clean Code, and Clean Architecture principles. Works across Vue, Nuxt, Next.js, and other frontend stacks. Use when refactoring features, restructuring code, reorganizing architecture, cleaning up styles, extracting components, or improving maintainability.
+description: Guides code refactoring (feature, style, architecture) by assessing scope, planning large changes, applying SOLID/Clean Code/Clean Architecture principles, and following the task's 測試策略（Test-First/Test-After/Exploratory，見 user-stories skill）when one is specified. Works across Vue, Nuxt, Next.js, and other frontend stacks. Use when refactoring features, restructuring code, reorganizing architecture, cleaning up styles, extracting components, or improving maintainability.
 ---
 
 # Refactor Workflow
@@ -118,13 +118,24 @@ description: Guides code refactoring (feature, style, architecture) by assessing
 
 Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 
-### Step 6: 驗證 / Validation
+### Step 6: 測試策略判斷 / Test Strategy
+
+若對應的任務檔案已有「測試策略」欄位（`/user-stories` 產出，見該 skill 的「測試策略判斷」）→ 依該欄位執行：
+
+- **Test-First**：若對應測試已存在且應為紅燈（例如 `/next-task` 分派時告知「對應測試已存在於 `{路徑}` 且目前應為紅燈」）→ 把該測試當作 spec 的一部分，重構/調整程式碼至該測試轉綠；測試正確表達預期行為就不要為了通過而修改測試期望值，只有測試本身寫錯時才能改，且需說明理由（比照 `/fix` 對 Test 類型錯誤的判準）。若測試尚未存在，先依測試對象呼叫 `/unit-test`／`/vue-integration-test`／`/react-integration-test`／`/e2e-test` 撰寫，確認紅燈後再重構到綠燈。
+- **Test-After**：先完成 Step 4 的重構，再呼叫對應測試 skill 補測試。
+- **Exploratory**：可不寫自動化測試，但需在 Step 7 的總結中說明原因。
+
+若任務檔案沒有這個欄位（純重構、無對應 US 流程）→ 維持既有慣例：重構前後跑一次既有測試確認沒有引入回歸即可，不強制新增測試。
+
+### Step 7: 驗證 / Validation
 
 完成後必須：
 
 1. 執行 `npm run lint` 或專案對應的 lint 指令
 2. 使用 `ReadLints` 檢查修改過的檔案
-3. 簡述變更與驗證結果，標註需人工測試的部分
+3. 確認 Step 6 判定的測試策略確實有落實（Test-First 已轉綠、Test-After 已補測試，或 Exploratory 已說明原因）
+4. 簡述變更與驗證結果，標註需人工測試的部分
 
 ---
 
@@ -134,6 +145,7 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 
 - [ ] 重構類型與範圍已評估（Small/Medium/Large）
 - [ ] 若 Medium/Large，已產出 Plan 或與使用者確認切分
+- [ ] 若任務有「測試策略」欄位，已依 Test-First/Test-After/Exploratory 執行；沒有的話已跑既有測試確認無回歸
 - [ ] 符合偵測到的技術棧慣例與 `AGENTS.md`（樣式作用域、i18n、專案工具庫等）
 - [ ] UI：列表有穩定 key、props 有型別、模板/JSX 無複雜表達式
 - [ ] 狀態：依棧慣例更新 state（Vuex mutations / Pinia actions / Zustand set 等）
