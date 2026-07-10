@@ -28,6 +28,7 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 2. 讀 `jest.config.*` 或 `vitest.config.*` / `vite.config.*` 內的 `test` 設定：`testEnvironment`/`environment`、`testMatch`/`include`、`moduleNameMapper`/`alias`、`globals`。
 3. 讀 `AGENTS.md` / `CLAUDE.md`（若存在）確認專案既有測試慣例（檔案位置、命名、mock 慣例）。
 4. **優先遵守專案既有 pattern**：讀同目錄或同模組既有 `*.test.*`/`*.spec.*` 檔案，沿用其 mock 風格與斷言慣例，而非重新發明一套。
+5. **兩種設定檔同時存在時（migration 中常見）**：以「即將撰寫的測試檔所在目錄/模組」裡既有 `*.test.*`/`*.spec.*` 實際使用的 runner 為準；該目錄本身也沒有既有測試可參考時，不要自行猜測，先詢問使用者要用哪個 runner。
 
 | 抽象概念 | Jest | Vitest |
 |----------|------|--------|

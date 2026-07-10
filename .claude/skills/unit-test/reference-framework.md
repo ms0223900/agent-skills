@@ -17,7 +17,7 @@
 
 ## 二、Mocking 策略
 
-- **模組 mock**：`jest.mock('./module')` 與 `vi.mock('./module')` API 幾乎一致（~95% 相容），但 **Vitest 的 `vi.mock` 是靜態分析時 hoist**，mock factory 內不能直接參照頂層 `const`，需用 `vi.hoisted()` 宣告；Jest 的 hoisting 是 bytecode 轉換，較寬容。
+- **模組 mock**：`jest.mock('./module')` 與 `vi.mock('./module')` API 幾乎一致（~95% 相容），但兩者的 hoist 機制不同：**Vitest 的 `vi.mock` 是建置時靜態分析 hoist**，mock factory 內不能直接參照頂層 `const`，需用 `vi.hoisted()` 宣告；**Jest 是透過 `babel-plugin-jest-hoist` 這個 Babel 原始碼轉換（source transform）**，在編譯階段把 `jest.mock()` 呼叫搬到 import 之前，對頂層 `const` 的參照較寬容——兩者都是編譯期的靜態轉換，不是執行期的 bytecode 操作，差別在於轉換工具鏈與寬容度。
 - **Spy**：`jest.spyOn(obj, 'method')` 與 `vi.spyOn(obj, 'method')` 幾乎相同；當你只想觀察/覆寫某個方法、其餘保留真實實作時用 spy，而非整個模組 mock 掉。
 - **ESM mocking 差異**：Jest 對 ESM 仍需 `--experimental-vm-modules` + `jest.unstable_mockModule` 才能做真正 ESM mock；Vitest 把 ESM 當一等公民（透過 Vite 的 module graph 執行），對 ESM 密集或 Vite/Nuxt 專案明顯更簡單。
 - **假時間/日期**：兩者皆有 `jest.useFakeTimers()`/`vi.useFakeTimers()`、`advanceTimersByTime`、`setSystemTime`。共同陷阱：推進假時間可能讓「以 promise 為基礎的微任務」程式碼死鎖——優先用 **async 版本**（`advanceTimersByTimeAsync`/`runAllTimersAsync`），會在每個 tick 之間 flush microtask。
@@ -65,6 +65,6 @@
 | ESM | 實驗性、需開關 | 原生一等公民 |
 | 速度 | 冷啟動較慢（Jest 30 已縮小差距） | watch mode 較快（Vite module graph），遷移案例常見 30–70% CI 時間下降 |
 | Mocking API | `jest.mock`/`jest.fn`/`jest.spyOn` | `vi.mock`/`vi.fn`/`vi.spyOn`，約 95% API 相容 |
-| Hoisting | bytecode 轉換 hoist | 靜態分析 hoist，外部變數需 `vi.hoisted()` |
+| Hoisting | `babel-plugin-jest-hoist`（Babel 原始碼轉換）hoist | 建置時靜態分析 hoist，外部變數需 `vi.hoisted()` |
 | Globals | 預設全域 | 需 `test.globals: true` 才 opt-in |
 | 設定 | 獨立 `jest.config`，需 Babel/ts-jest/swc transform | 重用 Vite 設定，不需額外 transform pipeline |

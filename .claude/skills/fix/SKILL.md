@@ -25,6 +25,7 @@ description: 修正 ESLint error、TypeScript type error、測試失敗、compil
 2. 讀 `AGENTS.md` / `CLAUDE.md`（若存在）
 3. 檢查工具設定檔：`.eslintrc*` / `eslint.config.*`、`tsconfig.json`、`jest.config.*` / `vitest.config.*`、`playwright.config.*`、`nuxt.config.*` / `next.config.*` / `vite.config.*`
 4. 將結果記在內部上下文，再套用下方框架對照 overlay；**優先遵守專案既有規範與同目錄既有 pattern**，無文件時才用偵測到的框架預設慣例
+5. **`jest.config.*` 與 `vitest.config.*` 同時存在時（migration 中常見）**：以受影響測試檔所在目錄/模組裡既有測試實際使用的 runner 為準；無既有測試可參考時，先詢問使用者，不要自行猜測。
 
 | 抽象概念 | Vue 2 | Nuxt 3 | Next.js (App Router) |
 |----------|-------|--------|----------------------|

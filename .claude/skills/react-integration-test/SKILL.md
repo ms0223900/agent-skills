@@ -136,7 +136,7 @@ describe('<Component> 渲染整合測試', () => {
 
 **一般情境**：
 
-- 單跑：`npx jest <測試檔路徑> --no-coverage` 或 `npx vitest run <測試檔路徑>`（依專案偵測到的 runner）
+- 單跑：`npx jest <測試檔路徑> --no-coverage` 或 `npx vitest run <測試檔路徑>`（依專案偵測到的 runner；兩種設定檔同時存在時，以同目錄/模組既有測試實際使用的 runner 為準，無既有測試可參考則先詢問使用者，不要自行猜測）
 - 全 suite：`npx jest --no-coverage` / `npx vitest run`
 - 若要 lint：`npx eslint <測試檔路徑>`
 
