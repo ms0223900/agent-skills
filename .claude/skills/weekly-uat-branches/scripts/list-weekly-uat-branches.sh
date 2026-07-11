@@ -4,13 +4,28 @@
 # Output: commits with correct ticket attribution + deduplicated ticket list.
 set -euo pipefail
 
-AUTHOR="penguin"
+AUTHOR=""
 SINCE=""
 UNTIL=""
 TARGET="origin/uat"
+TICKET_PATTERN='(SPRD|SOPS)-[0-9]+'
+BRANCH_PREFIX="feature/"
 
 usage() {
-  echo "Usage: $0 --since YYYY-MM-DD --until YYYY-MM-DD [--author NAME] [--target BRANCH]"
+  cat <<EOF
+Usage: $0 --author NAME --since YYYY-MM-DD --until YYYY-MM-DD \\
+  [--target BRANCH] [--ticket-pattern REGEX] [--branch-prefix PREFIX]
+
+Required:
+  --author          Git author (substring match, same as git log --author)
+  --since           Range start (inclusive), YYYY-MM-DD
+  --until           Range end (exclusive), YYYY-MM-DD — commits before until 00:00:00
+
+Optional:
+  --target          Merge target ref (default: origin/uat)
+  --ticket-pattern  Ticket regex (default: (SPRD|SOPS)-[0-9]+)
+  --branch-prefix   Feature branch prefix in merge messages (default: feature/)
+EOF
   exit 1
 }
 
@@ -20,37 +35,51 @@ while [[ $# -gt 0 ]]; do
     --since) SINCE="$2"; shift 2 ;;
     --until) UNTIL="$2"; shift 2 ;;
     --target) TARGET="$2"; shift 2 ;;
+    --ticket-pattern) TICKET_PATTERN="$2"; shift 2 ;;
+    --branch-prefix) BRANCH_PREFIX="$2"; shift 2 ;;
     -h|--help) usage ;;
-    *) echo "Unknown option: $1"; usage ;;
+    *) echo "Unknown option: $1" >&2; usage ;;
   esac
 done
 
-[[ -z "$SINCE" || -z "$UNTIL" ]] && usage
+[[ -z "$AUTHOR" || -z "$SINCE" || -z "$UNTIL" ]] && usage
 
-git fetch --all --quiet 2>/dev/null || true
+if ! fetch_err=$(git fetch --all 2>&1); then
+  echo "WARNING: git fetch --all failed; results may be stale (using local $TARGET)." >&2
+  echo "$fetch_err" >&2
+fi
 
 TMP_COMMITS=$(mktemp)
 TMP_RESULTS=$(mktemp)
 TMP_TICKETS=$(mktemp)
-trap 'rm -f "$TMP_COMMITS" "$TMP_RESULTS" "$TMP_TICKETS"' EXIT
+TMP_MERGES=$(mktemp)
+trap 'rm -f "$TMP_COMMITS" "$TMP_RESULTS" "$TMP_TICKETS" "$TMP_MERGES"' EXIT
 
-ticket_from_subject() {
-  echo "$1" | grep -oE '(SPRD|SOPS)-[0-9]+' | head -1 || true
+# Cache uat merge commits (full history for attribution; date filter applied separately)
+build_merge_cache() {
+  git log "$TARGET" --merges --format="%H %s" 2>/dev/null \
+    | grep -E "${BRANCH_PREFIX}(${TICKET_PATTERN})" > "$TMP_MERGES" || true
 }
 
-ticket_from_source() {
-  echo "$1" | grep -oE '(SPRD|SOPS)-[0-9]+' | head -1 || true
+ticket_from_text() {
+  echo "$1" | grep -oE "$TICKET_PATTERN" | head -1 || true
 }
 
-ticket_from_uat_merge() {
+ticket_from_merge_subject() {
+  echo "$1" | grep -oE "${BRANCH_PREFIX}(${TICKET_PATTERN})" | head -1 \
+    | sed "s|^${BRANCH_PREFIX}||" || true
+}
+
+read_merges_for_ticket() {
   local hash="$1"
+  local merge_source="$2"
   local merge_hash merge_subject merge_ticket parent2
 
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
     merge_hash="${line%% *}"
     merge_subject="${line#* }"
-    merge_ticket=$(echo "$merge_subject" | grep -oE "feature/((SPRD|SOPS)-[0-9]+)" | head -1 | sed 's|feature/||' || true)
+    merge_ticket=$(ticket_from_merge_subject "$merge_subject")
     [[ -z "$merge_ticket" ]] && continue
 
     parent2=$(git rev-parse "${merge_hash}^2" 2>/dev/null || true)
@@ -60,13 +89,30 @@ ticket_from_uat_merge() {
       echo "$merge_ticket"
       return 0
     fi
-  done < <(git log "$TARGET" --merges \
-    --since="${SINCE} 00:00:00" \
-    --until="${UNTIL} 00:00:00" \
-    --format="%H %s" 2>/dev/null \
-    | grep -E "feature/(SPRD|SOPS)-[0-9]+" || true)
+  done < "$merge_source"
 
   return 1
+}
+
+# Resolve ticket from uat merge commits where hash is ancestor of merged branch tip (^2)
+ticket_from_uat_merge() {
+  local hash="$1"
+  local range_filter="${2:-}"
+
+  if [[ "$range_filter" == "range" ]]; then
+    local ranged_merges
+    ranged_merges=$(mktemp)
+    git log "$TARGET" --merges \
+      --since="${SINCE} 00:00:00" \
+      --until="${UNTIL} 00:00:00" \
+      --format="%H %s" 2>/dev/null \
+      | grep -E "${BRANCH_PREFIX}(${TICKET_PATTERN})" > "$ranged_merges" || true
+    read_merges_for_ticket "$hash" "$ranged_merges" || { rm -f "$ranged_merges"; return 1; }
+    rm -f "$ranged_merges"
+    return 0
+  fi
+
+  read_merges_for_ticket "$hash" "$TMP_MERGES"
 }
 
 resolve_ticket() {
@@ -75,28 +121,67 @@ resolve_ticket() {
   local source_ref="$3"
   local ticket=""
 
-  ticket=$(ticket_from_subject "$subject")
+  ticket=$(ticket_from_text "$subject")
   [[ -n "$ticket" ]] && { echo "$ticket"; return 0; }
 
-  ticket=$(ticket_from_source "$source_ref")
+  ticket=$(ticket_from_text "$source_ref")
   [[ -n "$ticket" ]] && { echo "$ticket"; return 0; }
 
-  ticket=$(git name-rev --name-only "$hash" 2>/dev/null | grep -oE '(SPRD|SOPS)-[0-9]+' | head -1 || true)
+  ticket=$(git name-rev --name-only "$hash" 2>/dev/null | ticket_from_text || true)
   [[ -n "$ticket" ]] && { echo "$ticket"; return 0; }
 
-  ticket=$(ticket_from_uat_merge "$hash" || true)
+  # Prefer merges in date range, then fall back to any merge (cross-week attribution)
+  ticket=$(ticket_from_uat_merge "$hash" "range" || true)
+  [[ -n "$ticket" ]] && { echo "$ticket"; return 0; }
+
+  ticket=$(ticket_from_uat_merge "$hash" "" || true)
   [[ -n "$ticket" ]] && { echo "$ticket"; return 0; }
 
   return 1
 }
 
-is_chore_commit() {
-  echo "$1" | grep -qE '^chore(\(|:)'
+# SKILL §1.4 condition 2: commit belongs to a branch merged into target via merge commit
+is_merged_via_branch_merge() {
+  local hash="$1"
+  local ticket="$2"
+  local merge_hash merge_subject merge_ticket parent2
+
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    merge_hash="${line%% *}"
+    merge_subject="${line#* }"
+    merge_ticket=$(ticket_from_merge_subject "$merge_subject")
+    [[ "$merge_ticket" != "$ticket" ]] && continue
+
+    parent2=$(git rev-parse "${merge_hash}^2" 2>/dev/null || true)
+    [[ -z "$parent2" ]] && continue
+
+    if git merge-base --is-ancestor "$hash" "$parent2" 2>/dev/null; then
+      return 0
+    fi
+  done < "$TMP_MERGES"
+
+  return 1
+}
+
+is_merged_to_uat() {
+  local hash="$1"
+  local ticket="$2"
+
+  # Condition 1: commit hash is ancestor of target
+  if git merge-base --is-ancestor "$hash" "$TARGET" 2>/dev/null; then
+    return 0
+  fi
+
+  # Condition 2: commit belongs to a feature branch that was merge-committed into target
+  [[ -n "$ticket" ]] && is_merged_via_branch_merge "$hash" "$ticket"
 }
 
 is_stash_commit() {
   echo "$1" | grep -qE '^(index|WIP) on '
 }
+
+build_merge_cache
 
 git log --all --source --remotes \
   --author="$AUTHOR" \
@@ -109,24 +194,30 @@ while IFS=$'\t' read -r hash subject source_ref; do
   [[ -z "$hash" ]] && continue
   is_stash_commit "$subject" && continue
 
-  if ! git merge-base --is-ancestor "$hash" "$TARGET" 2>/dev/null; then
-    continue
-  fi
-
   ticket=$(resolve_ticket "$hash" "$subject" "$source_ref" || true)
   [[ -z "$ticket" ]] && continue
 
-  short=$(git rev-parse --short "$hash")
-  date=$(git log -1 --format="%ad" --date=format:"%Y-%m-%d %H:%M" "$hash")
-  printf '%s|%s|%s|%s\n' "$ticket" "$short" "$date" "$subject" >> "$TMP_RESULTS"
-
-  if ! is_chore_commit "$subject"; then
-    echo "$ticket" >> "$TMP_TICKETS"
+  if ! is_merged_to_uat "$hash" "$ticket"; then
+    continue
   fi
+
+  short=$(git rev-parse --short "$hash")
+  date=$(git log -1 --format="%cd" --date=format:"%Y-%m-%d %H:%M" "$hash")
+  printf '%s|%s|%s|%s\n' "$ticket" "$short" "$date" "$subject" >> "$TMP_RESULTS"
+  echo "$ticket" >> "$TMP_TICKETS"
 done < "$TMP_COMMITS"
 
-sort -t'|' -k1,1 -k3,3 "$TMP_RESULTS" 2>/dev/null || true
+echo "Commits:"
+if [[ -s "$TMP_RESULTS" ]]; then
+  sort -t'|' -k1,1 -k3,3 "$TMP_RESULTS"
+else
+  echo "(none)"
+fi
 
 echo "---"
 echo "TICKETS:"
-sort -u "$TMP_TICKETS" 2>/dev/null || true
+if [[ -s "$TMP_TICKETS" ]]; then
+  sort -u "$TMP_TICKETS"
+else
+  echo "(none — no matching branches in this range)"
+fi
