@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# List feature branches where author has commits in date range
-# and at least one such commit is merged into origin/uat.
-# Output: commits with correct ticket attribution + deduplicated ticket list.
+# List feature branches where author has commits in date range,
+# split into merged-to-uat and in-progress (unmerged) tickets.
+# Output: commits with ticket attribution + deduplicated ticket lists.
 set -euo pipefail
 
 AUTHOR=""
@@ -52,8 +52,10 @@ fi
 TMP_COMMITS=$(mktemp)
 TMP_RESULTS=$(mktemp)
 TMP_TICKETS=$(mktemp)
+TMP_IN_PROGRESS_RESULTS=$(mktemp)
+TMP_IN_PROGRESS_TICKETS=$(mktemp)
 TMP_MERGES=$(mktemp)
-trap 'rm -f "$TMP_COMMITS" "$TMP_RESULTS" "$TMP_TICKETS" "$TMP_MERGES"' EXIT
+trap 'rm -f "$TMP_COMMITS" "$TMP_RESULTS" "$TMP_TICKETS" "$TMP_IN_PROGRESS_RESULTS" "$TMP_IN_PROGRESS_TICKETS" "$TMP_MERGES"' EXIT
 
 # Cache uat merge commits (full history for attribution; date filter applied separately)
 build_merge_cache() {
@@ -197,14 +199,16 @@ while IFS=$'\t' read -r hash subject source_ref; do
   ticket=$(resolve_ticket "$hash" "$subject" "$source_ref" || true)
   [[ -z "$ticket" ]] && continue
 
-  if ! is_merged_to_uat "$hash" "$ticket"; then
-    continue
-  fi
-
   short=$(git rev-parse --short "$hash")
   date=$(git log -1 --format="%cd" --date=format:"%Y-%m-%d %H:%M" "$hash")
-  printf '%s|%s|%s|%s\n' "$ticket" "$short" "$date" "$subject" >> "$TMP_RESULTS"
-  echo "$ticket" >> "$TMP_TICKETS"
+
+  if is_merged_to_uat "$hash" "$ticket"; then
+    printf '%s|%s|%s|%s\n' "$ticket" "$short" "$date" "$subject" >> "$TMP_RESULTS"
+    echo "$ticket" >> "$TMP_TICKETS"
+  else
+    printf '%s|%s|%s|%s\n' "$ticket" "$short" "$date" "$subject" >> "$TMP_IN_PROGRESS_RESULTS"
+    echo "$ticket" >> "$TMP_IN_PROGRESS_TICKETS"
+  fi
 done < "$TMP_COMMITS"
 
 echo "Commits:"
@@ -219,5 +223,21 @@ echo "TICKETS:"
 if [[ -s "$TMP_TICKETS" ]]; then
   sort -u "$TMP_TICKETS"
 else
-  echo "(none — no matching branches in this range)"
+  echo "(none — no branches merged to uat in this range)"
+fi
+
+echo "---"
+echo "In progress commits:"
+if [[ -s "$TMP_IN_PROGRESS_RESULTS" ]]; then
+  sort -t'|' -k1,1 -k3,3 "$TMP_IN_PROGRESS_RESULTS"
+else
+  echo "(none)"
+fi
+
+echo "---"
+echo "IN_PROGRESS:"
+if [[ -s "$TMP_IN_PROGRESS_TICKETS" ]]; then
+  sort -u "$TMP_IN_PROGRESS_TICKETS"
+else
+  echo "(none — no in-progress branches in this range)"
 fi
