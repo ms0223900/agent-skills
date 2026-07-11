@@ -1,11 +1,11 @@
 ---
-name: weekly-uat-branches
-description: 查詢指定週期內由特定作者提交的 feature 分支，分為「已合併（含部分合併）至 uat」與「進行中（區間內有 commit 但尚未上 uat）」兩類，輸出單層清單。使用時機：使用者詢問「這週合併到 uat 的分支」、「進行中的分支」、「我的週報分支」、「某作者本週 uat 合併紀錄」，或提供日期區間要求整理分支清單。
+name: weekly-branch-report
+description: 依作者與日期區間整理 feature 分支週報，分「已合併 uat」（含部分合併）與「進行中」（區間內有 commit 但尚未上 uat）兩類輸出單層清單。使用時機：使用者詢問「這週合併到 uat 的分支」、「進行中的分支」、「我的週報分支」、「整理本週分支清單」，或提供日期區間要求彙整 uat 合併與進行中紀錄。
 ---
 
-# 週期 uat 合併分支清單 (Weekly UAT Branches)
+# 週期分支週報 (Weekly Branch Report)
 
-依作者與日期區間，找出 feature 分支並分兩類輸出：
+依作者與日期區間，整理 feature 分支週報並分兩類輸出：
 
 1. **已合併 uat**：至少有一筆區間內 commit 已進入 `origin/uat`
 2. **進行中**：區間內有作者 commit，且至少有一筆**尚未**進入 `origin/uat`
@@ -134,10 +134,10 @@ git merge-base --is-ancestor <commit-hash> <merge-hash>^2
 
 ### 1.8 可選：使用專案腳本
 
-在**目標專案 repo 根目錄**執行（腳本隨 skill 部署至 `.claude/skills/weekly-uat-branches/scripts/`）：
+在**目標專案 repo 根目錄**執行（腳本隨 skill 部署至 `.claude/skills/weekly-branch-report/scripts/`）：
 
 ```bash
-.claude/skills/weekly-uat-branches/scripts/list-weekly-uat-branches.sh \
+.claude/skills/weekly-branch-report/scripts/list-weekly-uat-branches.sh \
   --author "{author}" \
   --since 2026-06-08 \
   --until 2026-06-15 \
