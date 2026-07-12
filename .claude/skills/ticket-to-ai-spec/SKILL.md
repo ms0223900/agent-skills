@@ -1,6 +1,6 @@
 ---
 name: ticket-to-ai-spec
-description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. 產出 spec 檔案後會自動呼叫 `/independent-review`，由獨立 sub-agent 對照現有程式碼核對 spec 假設、揪出可能擋住本次需求驗收的既有問題；與本次需求強相關（不修就無法驗收）的問題併入主 spec，其餘無直接依賴的問題/疑慮拆到獨立的「盤點問題」spec 檔案。Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
+description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. 產出 spec 檔案後會自動呼叫 `/independent-review`，由獨立 sub-agent 對照現有程式碼核對 spec 假設、揪出可能擋住本次需求驗收的既有問題；與本次需求強相關（不修就無法驗收）的問題併入主 spec，其餘無直接依賴的問題/疑慮拆到獨立的「盤點問題」spec 檔案。若 ticket 屬於研究/非開發性質（例如 issue type 為 `S：Non-Dev`，或 ticket 自訂了「預期產出」條列項目），完整開發規格只作為技術附件，另外會產出一份格式對齊 ticket 自身「預期產出」的「研究結論」文件作為實際交付物。Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
 ---
 
 # Ticket → AI 開發規格 / Ticket → AI Dev Spec
@@ -76,6 +76,15 @@ description: Transforms raw tickets into machine-readable AI Agent development s
 ## Workflow / 操作流程
 
 每次使用本 skill 時，依照以下步驟行動。
+
+### Step 0: 判斷 Ticket 類型（研發 vs 研究/非開發）
+
+在收集輸入之前，先確認這張 ticket 的性質，這會決定「最終實際要提交的產出」長什麼樣子：
+
+- **開發類 ticket**（issue type 為 Story/Task/Bug 等，內容本身就是要新增/修改功能）：本 skill 產出的完整 7 節 AI 開發規格（User Story／功能細節／AC／技術邊界／MVP 判定／風險）本身就是最終產出，直接照 Workflow 走即可，不需要額外處理。
+- **研究/非開發類 ticket**（issue type 標記為 `S：Non-Dev` 之類，或 ticket 內文本身就寫了一段「預期產出／預期輸出」章節、明確定義了要交付的具體條列項目，例如「1. 說明現況 2. 評估是否需要改善方案並提出建議做法」）：**本 skill 產出的完整 AI 開發規格格式不能原封不動當作這類 ticket 的實際交付物**。即使規格裡加了「本 ticket 不含實作」的聲明文字，Given/When/Then AC、`MVP: true` 這類宣告式格式本身的語氣，仍然會蓋過那句聲明，讓讀者誤以為「問題已確認、範圍已核准、只待實作」。遇到這種 ticket：
+  1. 仍照 Step 1～11 走完整流程，把產出的完整規格當作**技術附件**存檔（見 File Output）——保留程式碼行號、AC 草案、獨立審查結果，供之後若真的要排入開發時直接引用。
+  2. **另外**依 Step 12 產出一份格式對齊 ticket 自己「預期產出」條列項目的「研究結論」文件，那份才是實際要提交出去的東西，不是技術附件。
 
 ### Step 1: 收集輸入 / Collect Input
 
@@ -205,6 +214,17 @@ Step 9 完成、且依「File Output」章節把主 spec 檔案存檔後，**自
 - **無法判斷是否阻塞**：誠實標記「需人工確認是否阻塞本次驗收」，並保守地放進主 spec 的阻塞問題一節（寧可讓人類多看一眼確認可以忽略，也不要漏放導致驗收卡關卻沒人知道原因）。
 - 若 `independent-review` 完全沒有發現任何問題（誠實回報「沒發現嚴重問題」）→ 主 spec 不需要新增阻塞問題一節，也不需要建立「盤點問題」檔案，在完成回報中明確說明「本次獨立審查未發現問題」即可，不要為了有產出硬掰內容。
 
+### Step 12: 研究/非開發類 Ticket 的實際交付物（僅 Step 0 判定為此類型時執行）
+
+若 Step 0 判定這是研究/非開發類 ticket，Step 11 完成後**額外**執行本步驟：
+
+1. 重新讀一次 ticket 原文裡「預期產出／預期輸出」章節列出的具體條列項目——那些條列項目的順序與措辭，才是這份文件要對齊的結構，不是本 skill 通用的 7 節結構。
+2. 產出一份新文件，用**建議語氣**改寫完整規格裡對應的結論：現況說明照實描述；建議做法要具體但避免宣告式措辭——不要出現 `MVP: true`、「AC 必須通過」這類會讓人誤以為已核准待實作的字眼，改用「建議」「建議做法為...」這類用語。
+3. 技術細節（程式碼行號、獨立審查驗證過程、詳細 AC 草案）不要複製進這份文件，用一句話連結回主 spec（技術附件）即可，避免重複與稀釋重點。
+4. **檔名要能一眼看出這是「要交出去的產出」**，與技術附件、任務拆解檔案區分開來（例如 `<KEY>-output-<slug>.md`，或詢問使用者專案內是否已有類似的命名慣例）。
+5. 在主規格（技術附件）檔案開頭加一句聲明，指向這份研究結論文件才是實際產出，主規格只是技術附件，供之後若排入開發時引用。
+6. 完成後明確告知使用者：「實際要提交的是《研究結論》這份文件，主規格是技術附件」——不要讓使用者誤以為主規格本身就是交付物。
+
 ---
 
 ## Output Format / 輸出格式
@@ -294,6 +314,10 @@ Step 9 完成、且依「File Output」章節把主 spec 檔案存檔後，**自
       ```
     - 主 spec 檔案在第 6 節「資訊缺失與風險」或新增的第 7 節末端，加一行指引：「另見 `<檔名>-issues.md`，盤點到的非阻塞問題」。
   - 兩種情況都沒有 → 不建立 `-issues.md`，也不新增主 spec 的第 7 節，維持原本 1～6 節即可。
+
+- **Step 12 產出的研究結論文件（僅研究/非開發類 ticket 適用）**
+  - 存放位置與任務拆解檔案放在一起（例如 `docs/user-stories/<KEY>/`），不要跟技術附件混在同一個 `docs/specs/` 資料夾，避免使用者難以分辨哪份才是要交出去的東西。
+  - 檔名需帶有明確標記使用者一眼認得出「這是產出」，例如 `<KEY>-output-<slug>.md`；沒有既有慣例時可直接提議這個命名法，讓使用者確認或调整。
 
 ---
 
