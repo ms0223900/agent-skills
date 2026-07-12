@@ -160,6 +160,8 @@ describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
 4. **Jest 解析 `@/`**：確認 `jest.config.js` 有 `moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' }`。
 5. **Vue transition／teleport**：真正的 transition 會讓斷言非同步，必要時 stub。
 6. **`mount` vs `shallowMount`**：整合測試幾乎都要 `mount`（才能確認子樹渲染）；`shallowMount` 適合不 care 子元件的純邏輯測試。
+7. **假陽性一：依賴 lifecycle 觸發的 debounce/deferred 呼叫，在測試裡不會自動發生**——例如 `immediate: true` 的 watcher 內部包了一層 `lodash/debounce`，若測試沒有 `jest.useFakeTimers()` + `advanceTimersByTime()` 推進，這個呼叫在測試的同步/microtask 執行窗口內根本不會觸發。若測試意圖是驗證「兩次呼叫的先後覆蓋關係」，卻讓其中一次呼叫透過這種會被跳過的路徑觸發，會變成只驗證了一次呼叫、卻誤以為驗證了兩次（測試對競態/覆蓋邏輯完全沒驗證到，卻通過了）。**排解**：測試「呼叫順序/覆蓋」邏輯時，直接呼叫底層非 debounce 方法（自行控制呼叫順序），debounce 本身的計時行為另外用推進假時間的方式單獨驗證，兩者不要混在同一個測試裡。
+8. **假陽性二：expected 值與被測 mutation 的參數共用同一個陣列/物件參考**——若 Vuex mutation 是「原地清空/修改後才重新賦值」（例如 `state.list.length = 0; state.list = newList;`），而測試裡拿去 `commit()` 的資料剛好跟拿來斷言的 `expected` 變數是同一個物件參考，之後只要這個 mutation 再被呼叫一次（即使是別的分支、別的資料），連 `expected` 變數本身都會被原地修改掉——導致「actual 被 bug 弄壞」與「expected 也一起被弄壞」兩邊长得一樣，斷言照樣通過（沒測到東西）。**排解**：expected 值一律用獨立深複本（`JSON.parse(JSON.stringify(x))` 或等效方式）在資料尚未被傳進任何 `commit()`/mutation 之前先取快照，不要直接拿測試裡建立 payload 用的原始變數當 expected。這類陷阱在「測試會原地修改陣列/物件的 mutation」時特別容易發生，模擬這種 mutation 的 mock store 也必須忠實複製「原地修改」這個行為本身（不能簡化成單純 `state.x = payload`），否則整類參考別名（reference-aliasing）bug 會變成永遠測不出來、卻誤以為有覆蓋。
 
 ### 8. Mutation Test（自我驗證）
 
