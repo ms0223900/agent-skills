@@ -191,6 +191,7 @@ describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
 ## 參考實例
 
 - `tests/unit/components/BetViewList/SOPS-3401-duplicate-match-bold.integration.test.ts` — 型別標註參考（`Wrapper`／`Store`、`interface` fixture、mock `render` 簽名）。
+- `tests/unit/components/BetViewList/__helpers__/mountBetViewList.ts` — 多個整合測試檔共用 `createStore()`/`mountComponent()` 與子元件 mock factory 的抽取範例（SPRD-925）；因 babel-plugin-jest-hoist 限制 `jest.mock(...)` factory 只能參照名稱以 `mock` 開頭的 import 變數，各測試檔頂層仍需自行呼叫 `jest.mock('@/components/X', () => mockXFactory())`，只是不用重複撰寫 factory 內容本身；同一個檔案也示範了「非泛型函式 + `as Wrapper<Vue & XxxVm>` 呼叫端斷言」的寫法，避免本專案 babel-eslint parser 對泛型函式語法的 parsing error。
 - `tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js` — MoreGame.vue 棒球排序，雙層斷言。
 - `feature/SPRD-660` 分支 `tests/unit/components/bet/SPRD-660-high-precision.integration.test.js` — BetViewList／ListCardItem／StrayCount 高精度計算，factory + stubs pattern。
 - `tests/unit/__fixtures__/baseball-sorting/` — JSON fixture 結構範例。
