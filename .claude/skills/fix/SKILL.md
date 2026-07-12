@@ -134,6 +134,7 @@ description: 修正 ESLint error、TypeScript type error、測試失敗、compil
    - `npm run lint`（若本次是修 lint/型別/邏輯，順手確認沒新增 lint 錯誤）
    - `tsc --noEmit`（若本次改動涉及型別）
 3. 若修正過程中又冒出新錯誤 → 回到 Step 2 重新分類，不要視為「大致修好了」就結束。
+4. 檢查本次新增/修改的註解：只在 WHY 非顯而易見時才留，不解釋 WHAT，不引用當下任務/PR/呼叫端，不寫多段落說明；發現明顯贅述就直接精簡。
 
 ### Step 7：總結回報
 

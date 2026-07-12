@@ -137,7 +137,8 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 1. 執行 `npm run lint` 或專案對應的 lint 指令
 2. 使用 `ReadLints` 檢查修改過的檔案
 3. 確認 Step 6 判定的測試策略確實有落實（Test-First 已轉綠、Test-After 已補測試，或 Exploratory 已說明原因）
-4. 簡述變更與驗證結果，標註需人工測試的部分
+4. 檢查本次新增/修改的註解：只在 WHY 非顯而易見時才留，不解釋 WHAT，不引用當下任務/PR/呼叫端，不寫多段落說明；發現明顯贅述就直接精簡
+5. 簡述變更與驗證結果，標註需人工測試的部分
 
 ---
 
@@ -153,6 +154,7 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 - [ ] 狀態：依棧慣例更新 state（Vuex mutations / Pinia actions / Zustand set 等）
 - [ ] Style：作用域正確、變數複用、BEM-like、無未解釋 magic numbers
 - [ ] ESLint 通過、ReadLints 無新增錯誤
+- [ ] 新增/修改的註解已精簡（只留 WHY，無 WHAT 說明、任務引用、多段落）
 
 ---
 
