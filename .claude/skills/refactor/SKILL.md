@@ -19,6 +19,8 @@ description: Guides code refactoring (feature, style, architecture) by assessing
 
 **何時不套用本 skill**：純 bug fix、單行 typo、新增功能（應使用 feature skill）。
 
+**還不確定要不要重構、只想先判斷時機**：用 `/refactor-scan` 先評估這次改動＋前幾次改動是否已達重構門檻；本 skill 假設範圍已經確定，直接進入執行。
+
 ---
 
 ## 技術棧偵測（Step 0）
