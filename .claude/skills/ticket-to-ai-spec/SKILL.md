@@ -1,6 +1,6 @@
 ---
 name: ticket-to-ai-spec
-description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
+description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. 產出 spec 檔案後會自動呼叫 `/independent-review`，由獨立 sub-agent 對照現有程式碼核對 spec 假設、揪出可能擋住本次需求驗收的既有問題；與本次需求強相關（不修就無法驗收）的問題併入主 spec，其餘無直接依賴的問題/疑慮拆到獨立的「盤點問題」spec 檔案。Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
 ---
 
 # Ticket → AI 開發規格 / Ticket → AI Dev Spec
@@ -181,6 +181,29 @@ Given [前置條件] When [使用者進行某個動作或系統發生某事件] 
    - 階段：**In Progress / QA / UAT**。
    - 定義：只有在開發或測試遇到邊界案例（Edge Cases）時才會浮現的問題，開發者應在遇到時暫停並與 PM/UX 同步決策（例如：長字串破版處理、特定 OS 渲染問題）。
 
+### Step 10: 獨立審查 / Independent Review
+
+Step 9 完成、且依「File Output」章節把主 spec 檔案存檔後，**自動**呼叫 `/independent-review`，不需要等使用者另外要求：
+
+- **審查標的**：剛存檔的主 spec 檔案本身（例如 `docs/specs/PROJ-123-checkout-apple-pay.md`）。
+- **額外素材**：原始 Ticket 全文、Step 2 整理出的 Impacted Areas（作為線索去現有程式碼裡找對應模組/API/欄位）。
+- **明確告知 sub-agent 這次審查的性質和一般用法不同**：標的是「尚未開始實作、即將依此 spec 開發」的規格文件，不是已完成的 diff/修改。除了 `independent-review` 既有的三個視角，額外指示它去現有程式碼中查證：
+  1. Spec 提到的 Impacted Areas、Technical Boundaries、引用的模組/API/欄位，是否真的存在、行為是否與 spec 假設相符（找不到或行為不符，就是一個 finding）。
+  2. 這個需求範圍內，程式碼現況是否已存在會擋住本次 AC 驗收的既有 bug、資料狀態或設計限制（例如某個共用函式現有邏輯本身就有錯，此需求剛好會依賴它）。
+  3. 其他跟本次需求沒有直接依賴、但盤點過程中發現的問題/疑慮（次要，僅記錄不阻塞）。
+- 依 `independent-review` Step 1 的規模評估規則決定開 1 或最多 3 個 sub-agent；不需要重新自創規則。
+
+### Step 11: 判斷分流並回填輸出
+
+拿到 `independent-review` 的結構化報告後，逐條檢視每個 finding，判斷是否與本次需求**強相關**：
+
+- **強相關（會阻擋本次驗收）**：若不處理，本次 spec 的某條 AC 就無法通過驗收（例如：AC 要求某計算結果正確，但該計算函式現有邏輯本身就有 bug）→ **併入主 spec 檔案**，不拆分：
+  - 在主 spec 新增一節「⚠️ 需求前置阻塞問題（獨立審查發現）」，列出問題、證據（檔案路徑/行號）、為何會擋住驗收。
+  - 回頭在對應的「驗收標準 (AC)」或「技術邊界」段落註記「此 AC 需先處理上述阻塞問題 N 才能驗證」，不要讓阻塞關係只藏在附註區塊裡。
+- **弱相關（不影響本次驗收）**：與本次需求沒有直接依賴，純粹是盤點過程中發現的問題/疑慮 → **拆到獨立的「盤點問題」spec 檔案**（命名與存放規則見「File Output」章節），主 spec 只留一行指引連結，不把次要問題塞進主 spec 稀釋重點。
+- **無法判斷是否阻塞**：誠實標記「需人工確認是否阻塞本次驗收」，並保守地放進主 spec 的阻塞問題一節（寧可讓人類多看一眼確認可以忽略，也不要漏放導致驗收卡關卻沒人知道原因）。
+- 若 `independent-review` 完全沒有發現任何問題（誠實回報「沒發現嚴重問題」）→ 主 spec 不需要新增阻塞問題一節，也不需要建立「盤點問題」檔案，在完成回報中明確說明「本次獨立審查未發現問題」即可，不要為了有產出硬掰內容。
+
 ---
 
 ## Output Format / 輸出格式
@@ -228,7 +251,16 @@ Given [前置條件] When [使用者進行某個動作或系統發生某事件] 
      - [列出需在開發前（Grooming / Spec Review 階段）由 PM/UX/架構師先給予答案的規格缺失]
    - **三、動態詢問與邊界調整 (Runtime/Dynamic Clarifications)**
      - [列出在開發或測試遇到特定邊界案例時，應主動暫停並與 PM/UX 同步決策的項目]
+
+7. ⚠️ 需求前置阻塞問題 (Blocking Issues from Independent Review)（僅 Step 11 判定有強相關問題時才新增此節）
+
+   - 問題 1：[標題]
+     - 證據：`path/to/file` 行號 / 具體說明
+     - 影響：擋住哪一條 AC（對應 Story/Scenario）
+   - （若有其他非阻塞問題被拆到獨立檔案）另見：`<spec 檔名>-issues.md`
 ```
+
+這個結構是 Step 1～9 完成當下就能產出的內容；第 7 節「需求前置阻塞問題」是 Step 10/11 獨立審查跑完之後才會決定要不要補上的**附加**章節，不影響前 6 節的既有編號。
 
 ---
 
@@ -240,6 +272,27 @@ Given [前置條件] When [使用者進行某個動作或系統發生某事件] 
     - 若來自 JIRA issue：`<ISSUE_KEY>-<short-slug>.md`，例如：`PROJ-123-checkout-apple-pay.md`。
     - 若非 JIRA issue：使用日期 + 短描述，例如：`2026-03-04-checkout-optimization.md`。
   - 若使用者明確要求 **不需存檔** 或指定其他路徑時，則依使用者指示覆蓋預設行為。
+
+- **獨立審查後的檔案更新（Step 10/11 完成後）**
+  - **強相關（阻塞）問題**：直接改寫剛才存的主 spec 檔案本身，補上「⚠️ 需求前置阻塞問題」一節與對應 AC 的註記，**不建立新檔案**。
+  - **弱相關（非阻塞）問題**：另存一份「盤點問題」檔案，命名比照主 spec 加上 `-issues` 後綴：
+    - 若來自 JIRA issue：`<ISSUE_KEY>-<short-slug>-issues.md`，例如：`PROJ-123-checkout-apple-pay-issues.md`。
+    - 若非 JIRA issue：`<原檔名去除副檔名>-issues.md`。
+    - 內容格式（每個問題視為未來可能獨立開單的線索，不需要完整比照主 spec 的九段結構）：
+      ```markdown
+      # {ISSUE_KEY} 盤點問題與疑慮（非本次需求阻塞項）
+
+      > 由 `/independent-review` 對本次 spec 進行獨立審查時額外盤點到、但與本次需求驗收無直接依賴的問題。可視情況另開 ticket 處理，不阻塞本次驗收。
+
+      ## 問題 1：{標題}
+
+      - **來源視角**：{獨立審查的視角 A/B/C 或查證項目}
+      - **問題描述**：...
+      - **證據**：`path/to/file` 行號 / 具體說明
+      - **建議後續**：例如「另開 ticket」「列入下個 sprint 的 tech debt」
+      ```
+    - 主 spec 檔案在第 6 節「資訊缺失與風險」或新增的第 7 節末端，加一行指引：「另見 `<檔名>-issues.md`，盤點到的非阻塞問題」。
+  - 兩種情況都沒有 → 不建立 `-issues.md`，也不新增主 spec 的第 7 節，維持原本 1～6 節即可。
 
 ---
 
