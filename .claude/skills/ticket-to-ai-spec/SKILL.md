@@ -68,6 +68,7 @@ description: Transforms raw tickets into machine-readable AI Agent development s
 
 - 禁止使用「優化」、「提升」、「改善」等模糊動詞，改用具體行為與指標。
 - 必須包含明確的欄位定義（Field Definitions）或 API 互動邏輯（Request/Response）。
+- 敘述性文字（Context 摘要、風險說明等）力求精簡：不要把其他章節（User Story、AC、技術邊界）已經表達過的內容再展開複述一次；Ticket 可能經過多輪釐清才定案，每次重新產出 spec 時都要留意有沒有把舊版的鋪陳原封不動搬過來，越改越長。
 ```
 
 ---
