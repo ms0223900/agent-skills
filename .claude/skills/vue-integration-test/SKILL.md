@@ -1,6 +1,6 @@
 ---
 name: vue-integration-test
-description: Guides writing Vue 2 component integration tests with @vue/test-utils + Jest + Vuex. Covers mock store factories, heavy-child stubbing via `jest.mock` + `stubs`, DOM + computed dual-layer assertions, and mutation-test self-check. Use when the user wants to add `.integration.test.js` for a Vue component, test rendered output against fixtures, or verify store-driven render paths.
+description: Guides writing Vue 2 component integration tests with @vue/test-utils + Jest + Vuex. Covers mock store factories, heavy-child stubbing via `jest.mock` + `stubs`, DOM + computed dual-layer assertions, and mutation-test self-check. Use when the user wants to add a `.integration.test.ts` (preferred) or `.integration.test.js` for a Vue component, test rendered output against fixtures, or verify store-driven render paths.
 ---
 
 # Vue 2 Integration Test Workflow
@@ -27,8 +27,9 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 2. 命名與檔案位置
 
-- 路徑：`tests/unit/components/<元件名稱>/<JIRA-單號>-<簡述>.integration.test.js`
-- 範例：`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`
+- **副檔名優先序**：專案已導入 TypeScript 時，新測試預設用 `.ts`（`.integration.test.ts`）；只有專案本身尚未支援 TypeScript（無 `tsconfig.json`、jest 未設定 ts transform）時才退回 `.js`。判斷方式：檢查專案 `tsconfig.json` 是否存在、`jest.config.*` 的 `transform` 是否已涵蓋 `.ts`；同目錄若已有 `.ts` 測試檔，直接視為該目錄的既有慣例，優先沿用。
+- 路徑：`tests/unit/components/<元件名稱>/<JIRA-單號>-<簡述>.integration.test.ts`
+- 範例：`tests/unit/components/BetViewList/SOPS-3401-duplicate-match-bold.integration.test.ts`（型別標註範例）
 - Fixture 獨立放 `tests/unit/__fixtures__/<feature>/*.json`，以 JSON 定義 `input` 與 `expected`，方便機讀比對。
 
 ### 3. 檔案骨架（照以下順序撰寫）
@@ -118,6 +119,12 @@ describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
 });
 ```
 
+**TypeScript 專案的型別標註慣例**（比照 `SOPS-3401-duplicate-match-bold.integration.test.ts`）：
+- `import { createLocalVue, mount, Wrapper } from '@vue/test-utils'; import Vuex, { Store } from 'vuex';`
+- mock 子元件的 `render()`：`render(this: { propA?: T }, h: (tag: string, data?: Record<string, unknown>) => unknown): unknown`
+- 用 `interface` 描述測試 fixture 的資料形狀，而非任由 TS 推斷成 `any`
+- 抓大放小：不需要對整個被測元件的 props/data 做完整型別窮舉，足以讓編輯器不噴大量紅字即可
+
 ### 4. Mock store 要點
 
 - **只塞元件實際讀到的欄位**。方法：`grep -n 'this\.\$store\.state\.'` 與 `mapState\|mapGetters` 找出依賴。
@@ -169,6 +176,7 @@ describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
 - Watch：`npx jest --watch`
 - 若要 lint：`npx eslint <測試檔路徑>`
 - 若失敗且原因不是測試本身寫錯，依 `/fix` 的流程診斷，不要為了通過而放寬斷言。
+- 若專案的 `jest.config.*` 是用 `babel-jest`（純去型別）處理 `.ts`，型別標註不影響測試實際執行結果，但仍要維持與專案既有 `.ts` 測試檔一致的型別風格。
 
 ## 產出時的溝通
 
@@ -180,6 +188,7 @@ describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
 
 ## 參考實例
 
+- `tests/unit/components/BetViewList/SOPS-3401-duplicate-match-bold.integration.test.ts` — 型別標註參考（`Wrapper`／`Store`、`interface` fixture、mock `render` 簽名）。
 - `tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js` — MoreGame.vue 棒球排序，雙層斷言。
 - `feature/SPRD-660` 分支 `tests/unit/components/bet/SPRD-660-high-precision.integration.test.js` — BetViewList／ListCardItem／StrayCount 高精度計算，factory + stubs pattern。
 - `tests/unit/__fixtures__/baseball-sorting/` — JSON fixture 結構範例。

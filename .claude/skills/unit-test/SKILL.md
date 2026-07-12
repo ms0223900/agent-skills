@@ -53,6 +53,7 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 ### Step 2：命名與檔案位置
 
 - 預設**與原始檔案同目錄 co-locate**：`fooBar.ts` → `fooBar.test.ts`（或依專案既有慣例改用 `.spec.ts`、獨立 `__tests__/`）。
+- **副檔名優先序**：專案已導入 TypeScript 時預設用 `.ts`／`.tsx`；未支援 TypeScript 的專案才用 `.js`／`.jsx`。
 - 只有跨模組的共用測試工具/fixture 才放到獨立的 `tests/`、`__fixtures__/` 目錄。
 - 檔名與 `describe` 標題清楚對應被測模組，方便追蹤。
 
