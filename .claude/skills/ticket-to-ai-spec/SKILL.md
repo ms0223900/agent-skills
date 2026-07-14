@@ -1,6 +1,6 @@
 ---
 name: ticket-to-ai-spec
-description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. 產出 spec 檔案後會自動呼叫 `/independent-review`，由獨立 sub-agent 對照現有程式碼核對 spec 假設、揪出可能擋住本次需求驗收的既有問題；與本次需求強相關（不修就無法驗收）的問題併入主 spec，其餘無直接依賴的問題/疑慮拆到獨立的「盤點問題」spec 檔案。若 ticket 屬於研究/非開發性質（例如 issue type 為 `S：Non-Dev`，或 ticket 自訂了「預期產出」條列項目），完整開發規格只作為技術附件，另外會產出一份格式對齊 ticket 自身「預期產出」的「研究結論」文件作為實際交付物。Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
+description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. 產出 spec 檔案後會自動呼叫 `/independent-review`，由獨立 sub-agent 對照現有程式碼核對 spec 假設、揪出可能擋住本次需求驗收的既有問題；與本次需求強相關（不修就無法驗收）的問題併入主 spec，其餘無直接依賴的問題/疑慮拆到獨立的「盤點問題」spec 檔案。若 ticket 屬於研究/非開發性質（例如 issue type 為 `S：Non-Dev`，或 ticket 自訂了「預期產出」條列項目），完整開發規格只作為技術附件，另外會產出一份格式對齊 ticket 自身「預期產出」的「研究結論」文件作為實際交付物。開發類 ticket 完成後，會主動引導使用者下一步呼叫 `/user-stories` 拆解成可執行任務，而不是直接建議進入實作。Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
 ---
 
 # Ticket → AI 開發規格 / Ticket → AI Dev Spec
@@ -224,6 +224,15 @@ Step 9 完成、且依「File Output」章節把主 spec 檔案存檔後，**自
 4. **檔名要能一眼看出這是「要交出去的產出」**，與技術附件、任務拆解檔案區分開來（例如 `<KEY>-output-<slug>.md`，或詢問使用者專案內是否已有類似的命名慣例）。
 5. 在主規格（技術附件）檔案開頭加一句聲明，指向這份研究結論文件才是實際產出，主規格只是技術附件，供之後若排入開發時引用。
 6. 完成後明確告知使用者：「實際要提交的是《研究結論》這份文件，主規格是技術附件」——不要讓使用者誤以為主規格本身就是交付物。
+
+### Step 13: 完成後導引下一步 / Guide the Next Step
+
+本 skill 的定位是「需求抽取與規格化」，**不是**實作流程的入口。Step 11（與適用時的 Step 12）完成、檔案都已存好之後，收尾時：
+
+- **開發類 ticket**（Step 0 判定）：完成回報中**不要**主動建議使用者直接呼叫 `/fix`／`/feature`／`/adjust`／`/refactor` 等實作類 skill 作為下一步——即使 spec 已經很完整、看起來可以直接動工。改為明確引導使用者：下一步呼叫 `/user-stories`，把剛產出的 spec 拆解成個別可執行、含依賴關係與測試策略判斷的 User Story／任務清單；之後才透過 `next-task` 或指定任務逐一進場實作。
+  - 理由：直接跳到實作建議，會略過任務拆解、複雜度評估與依賴排序，讓使用者錯過在正式動工前先看到整體任務地圖、逐一驗收的機會；US 拆解才是承接「規格化」產出、銜接「實作」之前的下一個自然環節。
+  - 若使用者在完成回報後明確表示「不需要拆 US，直接開始改」，才順著使用者指示直接建議對應的實作 skill；不要在未確認前就預設要跳過拆解。
+- **研究/非開發類 ticket**：完成回報聚焦在「研究結論文件才是實際交付物」，預設**不**主動建議呼叫 `/user-stories`（這類 ticket 目前定性上不是要馬上排入開發）。僅在使用者於收到研究結論後，明確表示要依建議做法排入開發時，才建議呼叫 `/user-stories`。
 
 ---
 
