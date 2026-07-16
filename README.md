@@ -53,10 +53,11 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 
 | Skill | 說明 |
 |-------|------|
-| `next-task` | 依 branch / JIRA 找出下一個未完成任務並分派對應 skill |
+| `next-task` | 依 branch / JIRA 找出下一個未完成任務並分派對應 skill；**epic 或 sprint 收尾**時建議交付與知識沉澱 |
 | `ticket-to-ai-spec` | 把原始 ticket 轉成 AI 可執行的開發規格 |
 | `user-stories` | 將需求拆成含 AC、測試策略、依賴關係的 User Stories |
-| `new-branch-feature` | 依 JIRA 單號從 master 開 feature 分支 |
+| `new-branch-feature` | 本機依 JIRA 從 master 開 `feature/{TICKET}` 分支 |
+| `new-branch-cloud-agent` | Cloud／Background Agent 開 `cursor/<name>-<suffix>` 分支 |
 | `weekly-branch-report` | 依作者與日期整理「已合併 uat / 進行中」分支週報 |
 
 ### 實作
@@ -85,17 +86,24 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 | `quick-debug` | 快速定位 bug / 異常行為 |
 | `find-component-render-path` | 分析 UI 元素如何被渲染、如何觸發 |
 | `independent-review` | 獨立 sub-agent 批判式審查（只報告、不改碼） |
-| `pr-acceptance-checklist` | PR/MR 驗收 checklist（對照 US + git changes） |
+| `pr-acceptance-checklist` | PR／MR 驗收清單（`for-review` 完整／`for-pr-body` 精簡） |
 | `us-acceptance-check` | 檢查 US 驗收條件是否已在程式碼中實現 |
 
 ### 交付與審閱
 
 | Skill | 說明 |
 |-------|------|
-| `change-report` | 以 git diff 產出分層變更報告（30 秒摘要／檔案清單／Mermaid 導讀） |
+| `change-report` | 以 git diff 產出分層變更報告（可選嵌入 `pr-acceptance-checklist` 的 `for-pr-body`） |
 | `pr-delivery` | commit／push／建立 draft PR（消費 change-report；禁止直推 main） |
 
-搭配 `.github/PULL_REQUEST_TEMPLATE.md`：PR 描述預設含行動端審閱指引。`feature`／`fix`／`adjust`／`refactor` 收尾會先跑 `change-report`；Background Agent 或使用者要求交付時再跑 `pr-delivery`。
+搭配 `.github/PULL_REQUEST_TEMPLATE.md`：PR 描述預設含行動端審閱指引。
+
+**建議鏈結**：
+
+1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）→ `/change-report`
+2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` Step 8）→ `/pr-delivery`
+3. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
+4. 分支：本機 JIRA → `new-branch-feature`；Cloud Agent → `new-branch-cloud-agent`
 
 ### 收尾與知識沉澱
 
