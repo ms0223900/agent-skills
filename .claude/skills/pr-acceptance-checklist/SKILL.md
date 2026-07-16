@@ -31,6 +31,7 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 
 - 純描述型問題（例如「這支 function 在做什麼？」）沒有明確與 PR / MR 驗收相關。
 - 單一極小改動（例如只修一個文案 typo）且使用者沒有要求 checklist。
+- 只要「作者視角」的分層變更摘要（30 秒摘要／檔案清單／Mermaid）→ 用 `/change-report`；要開 PR → 用 `/pr-delivery`。本 skill 偏 **reviewer 核對**，不負責開 PR。
 
 ---
 

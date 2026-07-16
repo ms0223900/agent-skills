@@ -88,6 +88,15 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 | `pr-acceptance-checklist` | PR/MR 驗收 checklist（對照 US + git changes） |
 | `us-acceptance-check` | 檢查 US 驗收條件是否已在程式碼中實現 |
 
+### 交付與審閱
+
+| Skill | 說明 |
+|-------|------|
+| `change-report` | 以 git diff 產出分層變更報告（30 秒摘要／檔案清單／Mermaid 導讀） |
+| `pr-delivery` | commit／push／建立 draft PR（消費 change-report；禁止直推 main） |
+
+搭配 `.github/PULL_REQUEST_TEMPLATE.md`：PR 描述預設含行動端審閱指引。`feature`／`fix`／`adjust`／`refactor` 收尾會先跑 `change-report`；Background Agent 或使用者要求交付時再跑 `pr-delivery`。
+
 ### 收尾與知識沉澱
 
 | Skill | 說明 |

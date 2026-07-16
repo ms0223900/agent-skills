@@ -139,6 +139,7 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 3. 確認 Step 6 判定的測試策略確實有落實（Test-First 已轉綠、Test-After 已補測試，或 Exploratory 已說明原因）
 4. 檢查本次新增/修改的註解：只在 WHY 非顯而易見時才留，不解釋 WHAT，不引用當下任務/PR/呼叫端，不寫多段落說明；發現明顯贅述就直接精簡
 5. 簡述變更與驗證結果，標註需人工測試的部分
+6. **交付（行動端可審閱）**：驗證通過後呼叫 `/change-report` 產出分層變更摘要。若為 Background／Cloud Agent，或使用者要求「開 PR／交付」，再呼叫 `/pr-delivery` 建立 draft PR（禁止直推 `main`／`master`）。本機互動且未要求開 PR 時，只產出報告並可提示「需要的話可呼叫 `/pr-delivery`」，不要自動 commit。
 
 ---
 
