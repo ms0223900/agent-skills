@@ -104,6 +104,7 @@ git diff --name-status
 - **驗證結果**：已跑的指令（lint／單元／整合／E2E）與通過／未跑原因；Exploratory 未寫測試時照實說明。
 - **風險／待確認**：行為邊界、相容性、需人工點擊的路徑、超出 scope 的檔案、無法從 code 驗證的 AC。
 - 若剛跑過 `/us-acceptance-check`，可引用其 PASS／PARTIAL／FAIL 結論，不要重跑整套驗收除非使用者要求。
+- **可選強化（有對應 US／spec 時）**：以模式 `for-pr-body` 呼叫 `/pr-acceptance-checklist`，把回傳的「驗證方式（對照 US）／超出範圍／風險精簡」併入本報告的「驗證結果」與「風險與待確認」。無 US 或改動極小時可跳過，不要為了呼叫而呼叫。
 
 ### Step 6：輸出固定格式
 
@@ -163,7 +164,7 @@ git diff --name-status
 | Skill | 關係 |
 |-------|------|
 | `/pr-delivery` | 消費本 skill 的輸出作為 PR body；負責 commit／push／開 PR |
-| `/pr-acceptance-checklist` | Reviewer 核對「該做／不該做」；可選把其 checklist 附在 PR comment，不取代本報告 |
+| `/pr-acceptance-checklist` | Step 5 可選以 **`for-pr-body`** 取得精簡驗證／風險區塊；完整 **`for-review`** checklist 留給審閱 comment，不取代本報告的 30 秒導讀 |
 | `/us-acceptance-check` | 提供「驗證結果」素材 |
 | `/independent-review` | 深度批判審查；本 skill 是導讀，不是挑錯 |
 | `/weekly-branch-report` | 跨多工單週報摘要；本 skill 是單次變更的交付導讀 |

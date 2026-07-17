@@ -1,6 +1,6 @@
 ---
 name: pr-acceptance-checklist
-description: Provides a structured, repeatable PR/MR review acceptance checklist, driven by user stories and git changes. Use to systematically verify that a change does what it should, and does not touch what it should not.
+description: 依 user stories 與 git 變更產出 PR／MR 驗收清單。支援兩種模式：for-review（審閱者完整 checklist，預設）與 for-pr-body（作者交付用的精簡驗證／風險區塊，供 change-report／PR 描述嵌入）。使用時機：檢查 PR 有無超出 scope、生驗收清單、或為 PR 摘要補「驗證方式」區塊。
 ---
 
 # PR / MR 驗收清單 Skill
@@ -11,6 +11,24 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
   - 是否「該做的都有做」。
   - 是否「有動到不該動的地方」。
 - **Scope**: 著重在 **程式層面的靜態檢查與 checklist 生成**（檔案範圍、API 呼叫、DOM/事件、樣式、config 等），不代替實際人工或自動化測試，但會協助明確列出需要測的項目。
+- **不負責**開 PR 或寫 30 秒導讀 → 那些是 `/pr-delivery`／`/change-report`。
+
+---
+
+## 輸出模式 / Modes
+
+執行前先選定模式（可在使用者指令中寫 `for-review`／`for-pr-body`，或依呼叫情境推斷）：
+
+| 模式 | 何時用 | 輸出形態 |
+|------|--------|----------|
+| **`for-review`**（**預設**） | Reviewer／QA 要核對「該做／不該做」；「幫我看這個 PR」「生驗收清單」 | 完整可勾選 Acceptance Checklist + 風險與建議測試 |
+| **`for-pr-body`** | 作者交付：`/change-report` 需要「驗證結果／風險」素材；「幫我補 PR 描述的驗證區塊」 | **精簡**區塊（見 Step 4b），可直接嵌入 PR body／change-report，**不要**輸出完整 reviewer checklist |
+
+推斷規則：
+
+- 由 `/change-report` 呼叫、或使用者說「給 PR 描述／摘要用」→ `for-pr-body`。
+- 其餘未指明 → `for-review`。
+- 兩種模式共用 Step 1～3 的蒐集與對應；差在 Step 4／5 的輸出長度與對象。
 
 ---
 
@@ -21,7 +39,8 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 - 使用者已經完成一個 feature branch / PR / MR，希望：
   - 檢查實作是否符合 user stories / spec。
   - 檢查是否有「超出範圍」的變更。
-  - 產出一份可以貼在 PR 描述或 review comment 裡的「驗收 checklist」。
+  - 產出一份可以貼在 PR 描述或 review comment 裡的「驗收 checklist」（`for-review`）。
+  - 或只要精簡的驗證／風險文字給 PR 摘要用（`for-pr-body`）。
 - 使用者問類似：
   - 「幫我看這個 PR 有沒有動到不該動的地方？」
   - 「這幾個 user stories 有沒有都實作到了？」
@@ -31,7 +50,7 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 
 - 純描述型問題（例如「這支 function 在做什麼？」）沒有明確與 PR / MR 驗收相關。
 - 單一極小改動（例如只修一個文案 typo）且使用者沒有要求 checklist。
-- 只要「作者視角」的分層變更摘要（30 秒摘要／檔案清單／Mermaid）→ 用 `/change-report`；要開 PR → 用 `/pr-delivery`。本 skill 偏 **reviewer 核對**，不負責開 PR。
+- 只要「作者視角」的分層變更摘要（30 秒摘要／檔案清單／Mermaid）且**不需**補驗證對照 → 只用 `/change-report`；要開 PR → `/pr-delivery`。若 change-report 需要更完整的「驗證方式」對照 US，再以 `for-pr-body` 呼叫本 skill。
 
 ---
 
@@ -39,11 +58,12 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 
 > 下列步驟是 Agent 的內部工作流程，不需要逐字回覆給使用者，但輸出內容要反映這些步驟的結果。
 
+0. **選定模式**（`for-review` 或 `for-pr-body`）
 1. **收集上下文 / Collect Context**
 2. **盤點變更範圍 / Inventory Changes**
 3. **對應 user stories 與變更 / Map Stories ↔ Changes**
-4. **撰寫 PR/MR 驗收清單 / Draft Acceptance Checklist**
-5. **指出風險與建議測試項目 / Risks & Test Suggestions**
+4. **依模式產出**：`for-review` → Step 4a 完整 checklist；`for-pr-body` → Step 4b 精簡驗證區塊
+5. **風險與建議測試**（`for-review` 寫完整；`for-pr-body` 併入 4b 的短列表，不另開長篇）
 
 以下詳述每個步驟。
 
@@ -125,9 +145,10 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 
 ---
 
-## Step 4: 撰寫 PR/MR 驗收清單 / Draft Acceptance Checklist
+## Step 4a: `for-review` — 完整驗收清單
 
-目標：**產出一份可以直接用在 PR 描述或 review comment 裡的「可勾選驗收清單」。**
+目標：**產出一份可以直接貼在 review comment（或 PR 討論）的「可勾選驗收清單」。**  
+此模式面向**審閱者**，預設不要塞進 PR 描述的最上方（會排擠 30 秒摘要）；若要附在 PR，建議當 comment 或摺疊區塊。
 
 輸出格式建議（Markdown）：
 
@@ -171,18 +192,47 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
 
 ---
 
+## Step 4b: `for-pr-body` — 精簡驗證區塊（給作者／change-report）
+
+目標：**產出可直接嵌進 `/change-report`「驗證結果」「風險與待確認」的短區塊**，方便行動端先掃讀。不要輸出完整 Scope／UI／API 長 checklist。
+
+輸出格式（Markdown）：
+
+```markdown
+### 驗證方式（對照 US）
+
+- **US-XXX** – {一句：靜態分析結論 ✅／⚠️／❓}；建議驗證：{一句或「已由單元測試覆蓋」}
+- **US-YYY** – …
+
+### 超出範圍？
+
+- {無／列出可疑檔案或變更}
+
+### 風險與待確認（精簡）
+
+- {最多 3～5 點；無則寫「無」}
+```
+
+約束：
+
+- 每個 US 一行結論，不要展開成多層 checkbox。
+- 已跑過的指令（lint／test）用一行帶過，細節留給 change-report 的「驗證結果」。
+- 無法從 code 判斷的 AC 標 ❓，並寫「需實測／日誌」。
+
+---
+
 ## Step 5: 風險與建議測試項目 / Risks & Test Suggestions
 
-目標：**對 reviewer / QA 提供「哪裡需要特別測」與「可能的風險點」。**
-
-輸出中應包含：
+**`for-review`**：對 reviewer／QA 提供完整「哪裡需要特別測」與「可能的風險點」。
 
 - **Potential Risks / 可能風險**
   - 例如：「`OddsHistory` 頁面雖然入口已被移除，但若有人直接敲 URL 仍會進入空圖表頁面，產品需決定是否接受。」
   - 例如：「此變更移除了 `/GameInfo/GameInfoLog` API 呼叫，若後端仍被其它入口使用，需再確認是否完全停用。」
 - **Recommended Manual Test Scenarios / 建議手動測試情境**
-  - 以 Given/When/Then 或簡短條列，直接從 user stories 的 AC 衍生，用實際頁面名稱 / 按鈕名描述。
-  - 明確標示 PC / Mobile 是否都要測。
+  - 以 Given/When/Then 或簡短條列，直接從 user stories 的 AC 衍生，用實際頁面名稱／按鈕名描述。
+  - 明確標示 PC／Mobile 是否都要測。
+
+**`for-pr-body`**：不要另開本節長文；風險已含在 Step 4b。若呼叫端是 `/change-report`，把 4b 全文交回即可。
 
 ---
 
@@ -196,8 +246,10 @@ description: Provides a structured, repeatable PR/MR review acceptance checklist
   - 必要時用 `Grep` 搜尋 API 名稱、class 名稱，確認是否仍有殘留。
 - 回覆給使用者時：
   - **不要貼過長的 code 區塊**，只需用簡短 code reference 或文字描述指出關鍵變更位置。
-  - 以 **checklist 為主體**，並附上一段簡短 summary（例如「所有程式變更皆落在購物車與水位歷程模組內，無其它模組被動到。」）。
+  - `for-review`：以 **checklist 為主體**，並附上一段簡短 summary（例如「所有程式變更皆落在購物車與水位歷程模組內，無其它模組被動到。」）。
+  - `for-pr-body`：只交 Step 4b 短區塊，開頭標明模式，方便 `/change-report` 合併。
 - 若從程式碼角度無法驗證某些 AC（例如「後端 log 是否正確記錄」、「GA 事件是否上報」），要明確標註為「需實際測試 / 日誌驗證」，不要假設已完成。
+- 與 `/change-report`／`/pr-delivery`：`for-pr-body` 餵摘要；`for-review` 適合 PR 開完後當 review comment。
 
 ---
 
