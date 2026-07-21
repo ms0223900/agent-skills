@@ -79,6 +79,12 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 | `react-integration-test` | React / Next 元件測試（RTL + user-event） |
 | `e2e-test` | E2E（Playwright，BDD / AC 驅動） |
 
+### 環境／預覽
+
+| Skill | 說明 |
+|-------|------|
+| `static-html-host` | 臨時用 `http.server`＋（可選）localtunnel 預覽靜態 HTML（tmux 常駐；用完須關掉） |
+
 ### 除錯與審查
 
 | Skill | 說明 |
