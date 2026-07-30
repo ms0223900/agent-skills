@@ -1,6 +1,6 @@
 ---
 name: next-task
-description: 依目前 git branch（或指定的 JIRA 單號）自動找出對應追蹤目錄中「依賴順序上下一個未完成的任務」，依任務類型分派至測試撰寫（`/unit-test`、`/vue-integration-test`、`/react-integration-test`、`/e2e-test`）、`/refactor`（提取/重構/拆分/搬移）、`/fix`（修正既有錯誤/bug）或 `/feature`（一般功能）實作，並尊重任務的「測試策略」欄位（Test-First 時明確告知實作對象「已有失敗測試待轉綠」），跑專案測試 runner 到全過（過程中若出現 lint/type/test/build 錯誤，交由 `/fix` 診斷修正），再呼叫 `/us-acceptance-check` 驗收該任務、呼叫 `/refactor-scan` 判斷是否已達重構時機（由其自行徵求確認後才分派 `/refactor`），並回填追蹤目錄 README 的「全域驗收 Checklist」。每次只處理一個任務，不會連續跑完整個 Phase。使用時機：使用者說「接下來要做什麼」、「下一個任務」、「next task」、「這個 branch 還有哪些沒做完」、「幫我把下一個 US/TASK 做完」。
+description: 依目前 git branch（或指定的 JIRA 單號）自動找出對應追蹤目錄中「依賴順序上下一個未完成的任務」，依任務類型分派至測試撰寫（`/unit-test`、`/vue-integration-test`、`/react-integration-test`、`/e2e-test`）、`/refactor`（提取/重構/拆分/搬移）、`/fix`（修正既有錯誤/bug）或 `/feature`（一般功能）實作，並尊重任務的「測試策略」欄位（Test-First 時明確告知實作對象「已有失敗測試待轉綠」），跑專案測試 runner 到全過（過程中若出現 lint/type/test/build 錯誤，交由 `/fix` 診斷修正），再呼叫 `/us-acceptance-check` 驗收該任務、呼叫 `/refactor-scan` 判斷是否已達重構時機（由其自行徵求確認後才分派 `/refactor`），並回填追蹤目錄 README 的「全域驗收 Checklist」。Epic 或 sprint 收尾時建議交付（`/change-report`／`/pr-delivery`）與知識沉澱。每次只處理一個任務，不會連續跑完整個 Phase。使用時機：使用者說「接下來要做什麼」、「下一個任務」、「next task」、「這個 branch 還有哪些沒做完」、「幫我把下一個 US/TASK 做完」、「sprint 收尾／這個 sprint 做完了」。
 ---
 
 # 尋找並實作下一個任務（Next Task Workflow）
@@ -26,7 +26,7 @@ description: 依目前 git branch（或指定的 JIRA 單號）自動找出對�
 1. `docs/user-stories/{KEY}*/`（可能有多個後綴變體，例如 `{KEY}-PHASE2`）
 2. `docs/specs/{KEY}/us/`
 3. `docs/specs/{KEY}-user-stories/`
-4. `docs/specs/{KEY}-*.md`（純規格檔，無任務拆解——只有在 1～3 都不存在時才當作唯一線索）
+4. `docs/specs/{KEY}-*.md`（純規格檔，無任務拆解——只有在 1～3 都不存在時才當作唯一線索；**排除** `*-issues.md` 盤點問題附檔）
 
 對每個第 1～3 層候選，依 reference.md 的規則跑一次「找下一個任務」演算法，判斷「是否仍有未完成任務」。
 
@@ -136,9 +136,31 @@ description: 依目前 git branch（或指定的 JIRA 單號）自動找出對�
 
 簡短總結：選了哪個追蹤目錄與原因、做了哪個任務、分派到哪個 skill、測試結果、`/us-acceptance-check` 結論、Step 6.5 是否呼叫了 `/refactor-scan`（及其判定的風險等級、是否進一步分派 `/refactor`）、README 是否更新。
 
-- 依 reference.md 的收尾判斷規則，若這是 README 驅動型且回填後所有 P0（必要）任務皆已勾選（P1/P2 依註記可延後不計）→ 告知使用者「這個 epic/feature 看起來已收尾」，建議之後另外執行 `/distill-playbook`；也可視情況執行 `/comment-trim`（回頭掃描整個 epic 累積下來的程式碼註解贅述）與 `/doc-trim`（回頭精簡 US/spec/playbook 等文件的敘述措辭）。**不要**自己去動 playbook / CLAUDE.md / 其他 skill 檔案，那是 `/distill-playbook` 自己的職責範圍；也不要自己動手精簡註解或文件措辭，那分別是 `/comment-trim` 與 `/doc-trim` 的職責範圍。
+#### 交付觸發（epic 收尾 **或** sprint 收尾）
+
+在回報末尾，若符合下列**任一**情況，進入「交付建議」流程（先於知識沉澱建議）：
+
+| 觸發 | 如何判定 |
+|------|----------|
+| **Epic／feature 收尾** | 依 reference.md 收尾判斷：README 驅動型且回填後所有 P0（必要）任務皆已勾選（P1/P2 依註記可延後不計）；或無 Checklist 型且該追蹤目錄任務全數完成 |
+| **Sprint 收尾** | 使用者明確表示「sprint 收尾」「這個 sprint 做完了」「sprint 結束要交付」等；或本回合一開始就是以 sprint 收尾為目標呼叫本 skill（即使單一 epic 尚未全勾，也以「本 sprint 要交付的變更範圍」為準） |
+
+交付建議（**本機互動預設只建議、不自動執行**）：
+
+1. 若工作區或 branch 上仍有未交付的程式變更 → 建議依序：`/change-report`（分層摘要）→ `/pr-delivery`（draft PR；禁止直推 main）。可選再以 `for-review` 跑 `/pr-acceptance-checklist` 貼成 PR comment。
+2. Background／Cloud Agent：在觸發成立且變更已驗證時，**應執行** `/change-report` + `/pr-delivery`（需要開 `cursor/...` 分支時先用 `/new-branch-cloud-agent`），再繼續下面的知識沉澱建議。
+3. Sprint 收尾但跨多個 epic／分支 → 不要假設單一 PR 能裝下一切：列出涉及的分支／追蹤目錄，請使用者指定要交付哪幾條，或逐條建議 `/pr-delivery`；可搭配 `/weekly-branch-report` 做區間盤點。
+
+#### 知識沉澱建議（交付建議之後）
+
+- **Epic／feature 收尾**時：建議之後另外執行 `/distill-playbook`；也可視情況執行 `/comment-trim` 與 `/doc-trim`。**不要**自己去動 playbook／CLAUDE.md／其他 skill 檔案，那是 `/distill-playbook` 的職責；也不要自己動手精簡註解或文件措辭（分別是 `/comment-trim`／`/doc-trim`）。
+- **僅 sprint 收尾、個別 epic 未收尾**：以交付建議為主；`/distill-playbook` 等知識沉澱等該 epic 真正收尾再建議，避免半成品經驗被寫進 playbook。
+
+其他：
+
 - 提示「下一個任務可能會是 XXX」，但**不要自動繼續實作**；需要使用者再次呼叫本 skill 才會處理下一個任務。
-- **不要**自動 `git add` / `git commit` 任何變更。
+- **本機互動**：**不要**自動 `git add`／`git commit`（與上方交付建議一致；實際 commit 由使用者確認後的 `/pr-delivery` 或人工處理）。
+- **Background／Cloud Agent**：不受「不要自動 commit」限制——在交付觸發成立時依 `/pr-delivery` 執行 commit／push／開 PR。
 
 ---
 
@@ -158,6 +180,7 @@ description: 依目前 git branch（或指定的 JIRA 單號）自動找出對�
 - 已經明確知道要驗收哪一份 US/TASK 檔案，且不需要「找出下一個」也不需要動手實作 → 直接用 `/us-acceptance-check`。
 - 使用者已經明確描述好要調整的內容（不需要先幫他找任務）→ 用 `/adjust`（補充調整既有功能的固定流程）或直接 `/feature`／`/refactor`。
 - 想整併一整個 epic 收尾後的知識到 Playbook/Skill/CLAUDE.md → 用 `/distill-playbook`；本 skill 只在偵測到疑似收尾時「建議」使用者另外執行，不會自己動手整併。
+- 只要開 PR／產出變更摘要、不需要找下一個任務 → 用 `/change-report`／`/pr-delivery`。
 - 需求文件都還沒拆成 User Story → 先用 `/user-stories`，本 skill 假設任務拆解已經存在。
 
 ---

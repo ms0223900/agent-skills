@@ -9,7 +9,7 @@
 | 1 | `docs/user-stories/{KEY}*/` | 目錄下 `README.md`（若有）+ 個別任務 `.md` | README 的表格「順序」欄 + 「依賴鏈摘要」，或無 README 表格時看各任務檔內文字依賴 |
 | 2 | `docs/specs/{KEY}/us/US-*.md` | `US-*.md` 檔名序 | README（若有）或各檔「依賴關係」欄 |
 | 3 | `docs/specs/{KEY}-user-stories/US-{KEY}-NNN-*.md` | 同上 | 同上 |
-| 4 | `docs/specs/{KEY}-*.md`（排除目錄，只算檔案） | 無 — 純規格文件，沒有任務顆粒度 | 不適用 |
+| 4 | `docs/specs/{KEY}-*.md`（排除目錄，只算檔案；**排除** `*-issues.md`——那是 `/ticket-to-ai-spec` 的盤點問題附檔，不是主規格） | 無 — 純規格文件，沒有任務顆粒度 | 不適用 |
 
 ### 1.2 glob 邊界陷阱（務必注意）
 

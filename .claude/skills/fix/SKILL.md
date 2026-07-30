@@ -147,6 +147,8 @@ description: 修正 ESLint error、TypeScript type error、測試失敗、compil
 
 完成後可視情況呼叫 `/refactor-scan`，評估這次修正（及前幾次相關改動）是否已達重構門檻——尤其是當根因牽涉的檔案在觀察窗口內已被反覆修改時；不強制執行，只在需要時使用。
 
+**交付（行動端可審閱）**：驗證通過後呼叫 `/change-report` 產出分層變更摘要。若為 Background／Cloud Agent，或使用者要求「開 PR／交付」，再呼叫 `/pr-delivery` 建立 draft PR（禁止直推 `main`／`master`）。本機互動且未要求開 PR 時，只產出報告並可提示「需要的話可呼叫 `/pr-delivery`」，不要自動 commit。
+
 ---
 
 ## Checklist
