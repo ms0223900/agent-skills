@@ -64,10 +64,10 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 
 | Skill | 說明 |
 |-------|------|
-| `grill-me` | 手動入口；呼叫後轉入 `grilling` |
-| `grilling` | 對方案、決策或想法逐題壓力測試，達成共識前不執行 |
+| `grill-me` | 手動入口；呼叫後轉入 `grilling`（內容源自 [mattpocock/skills](https://github.com/mattpocock/skills)，已 vendored 進本 repo） |
+| `grilling` | 對方案、決策或想法逐題壓力測試，達成共識前不執行（同上） |
 
-`ticket-to-ai-spec`、`feature`、`refactor` 會在規格或架構仍有多個關鍵決策時暫停並建議使用 `/grilling`；不會在執行中偷偷自動完成訪談。
+`ticket-to-ai-spec`、`feature`、`refactor` 會在規格或架構仍有多個關鍵決策時暫停並建議使用 `/grilling`；不會在執行中偷偷自動完成訪談。執行 `npx skills add ms0223900/agent-skills --skill '*'` 時會一併安裝這兩支，無需另外裝 `mattpocock/skills`。
 
 ### 實作
 
@@ -140,10 +140,9 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 │   ├── SKILL.md
 │   └── reference-*.md
 └── ...
-skills-lock.json             # 第三方 skill 來源與版本雜湊
 ```
 
-每個 skill 是一個目錄，至少包含 `SKILL.md`（YAML frontmatter + 指示）。Skills CLI 會自動發現 `.claude/skills/`。
+每個 skill 是一個目錄，至少包含 `SKILL.md`（YAML frontmatter + 指示）。Skills CLI 會自動發現 `.claude/skills/`。`grill-me`／`grilling` 以 vendored copy 形式放在 `.claude/skills/`，勿在 repo 根目錄為它們建立 `skills-lock.json` 條目，否則 Skills CLI 會把它們從可安裝清單排除。
 
 ## 建議用法
 
