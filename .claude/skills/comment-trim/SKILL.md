@@ -1,6 +1,7 @@
 ---
 name: comment-trim
-description: 整個功能（可能橫跨多次 feature/fix/adjust/refactor）開發完成後，回頭掃描這段期間累積的 git diff，抓出新增/修改的贅述、過長註解（解釋 WHAT、引用當下任務脈絡、多段落說明）並直接精簡，只保留必要的 WHY。純文字編輯、低風險可回退，不需要像 refactor-scan 一樣徵求確認。使用時機：使用者說「這個功能做完了，註解太長/太多了，幫我整理一下」、「回頭檢查一下這次改動的註解」、「comment 精簡一下」；或 `next-task` 偵測到 epic/feature 收尾時建議使用者執行。
+description: 掃描本次功能開發累積的 git diff，精簡新增／修改的贅述註解，只保留必要的 WHY。
+disable-model-invocation: true
 ---
 
 # 註解精簡掃描（Comment Trim）

@@ -1,6 +1,6 @@
 ---
 name: react-integration-test
-description: Guides writing React / Next.js component tests with React Testing Library (RTL) + @testing-library/user-event（不使用 Enzyme／shallow render）。涵蓋 query 優先順序、真實 Provider（Context/Redux/Zustand/React Query）取代 mock 內部、MSW 網路層 mocking、Next.js Server/Client Component 邊界。Use when the user wants a component/integration test for a React or Next.js component, or asks to verify rendered output / user interaction against a component.
+description: Guides writing React / Next.js component tests with React Testing Library (RTL) + @testing-library/user-event（不使用 Enzyme／shallow render）。Use when the user wants a component/integration test for a React or Next.js component, or asks to verify rendered output / user interaction against a component.
 ---
 
 # React / Next.js Integration Test Workflow
@@ -31,52 +31,9 @@ description: Guides writing React / Next.js component tests with React Testing L
 
 ### 3. 檔案骨架（照以下順序撰寫）
 
-```tsx
-/**
- * <JIRA/描述> — <Component>.tsx 元件整合測試
- * 覆蓋：<互動/狀態分支> 與 render 輸出是否符合 fixture。
- */
+順序：imports → MSW server（攔截網路層，不 mock fetch/axios 本身）→ Provider wrapper（用真實 Provider）→ describe 結構對齊 fixture／Scenario。
 
-// 1. imports
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import Target from './Target';
-import fixtureA from '../../__fixtures__/<feature>/scenario-a.json';
-
-// 2. MSW server — 攔截網路層，不 mock fetch/axios 本身
-const server = setupServer(
-  http.get('/api/xxx', () => HttpResponse.json(fixtureA.apiResponse)),
-);
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-
-// 3. Provider wrapper — 用真實 Provider，不 mock store/context 內部
-function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return render(
-    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
-  );
-}
-
-// 4. describe 結構對齊 fixture／Scenario
-describe('<Component> 渲染整合測試', () => {
-  it('使用者送出表單後顯示成功訊息', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<Target />);
-
-    await user.type(screen.getByLabelText('金額'), '100');
-    await user.click(screen.getByRole('button', { name: '送出' }));
-
-    expect(await screen.findByText('送出成功')).toBeInTheDocument();
-  });
-});
-```
+> **完整程式碼範例見 [reference.md](reference.md) 第一節**——動筆寫骨架前先讀該節，照其順序與結構撰寫。
 
 ### 4. Query 優先順序
 
@@ -118,9 +75,7 @@ describe('<Component> 渲染整合測試', () => {
 
 ### 9. Next.js 特殊情況
 
-- Client Component（`"use client"`）用 RTL/jsdom 測試方式與一般 React 元件相同，不需特殊處理。
-- Server Component（async、使用 `cookies()`/`headers()`/DB 呼叫等 server-only API）**目前無法用 RTL/jsdom 可靠地單元測試**——jsdom 是瀏覽器環境模擬，RSC 不會在裡面渲染，Jest 也不完整支援 async Server Component。建議：只對同步、簡單的 Server Component 做測試，把邏輯/畫面盡量抽到可測的 Client Component；完整的 RSC + data fetching + hydration 行為交給 `e2e-test`（Playwright）驗證。
-- `next/navigation`（`useRouter`、`usePathname`、`useSearchParams`）用 `jest.mock('next/navigation', ...)` 回傳 `jest.fn()`（或用 `next-router-mock` 套件處理依賴真實導航狀態的頁面）；舊版 Pages Router 則對應 mock `next/router`。
+Client Component 與一般 React 元件測試方式相同；Server Component（async、`cookies()`/`headers()`/DB 呼叫）**無法用 RTL/jsdom 可靠測試**，`next/navigation` 需 mock。**完整說明見 [reference.md](reference.md) 第二節**——遇到 Next.js 元件測不動或要判斷該不該用 RTL 測時先讀該節。
 
 ### 10. 常見反模式
 

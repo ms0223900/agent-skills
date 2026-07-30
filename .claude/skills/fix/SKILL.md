@@ -1,6 +1,6 @@
 ---
 name: fix
-description: 修正 ESLint error、TypeScript type error、測試失敗、compile/build error 等有明確工具輸出的錯誤。流程為重現錯誤→分類→（根因不明時）先假設後實證→修正根因→重跑驗證到全過。根因涉及行為/資料流等模糊問題時會先借用 quick-debug 定位再回來修；若程式碼本身無法確認根因，必須誠實告知並具體請使用者提供 API response、log、畫面截圖等佐證，不可以亂猜亂改。使用時機：使用者貼 ESLint/tsc/test/build 的錯誤訊息，或說「幫我修這個錯誤」「這個測試過不了」「type error 修一下」「build 失敗」。
+description: Fix ESLint, TypeScript, test, or build errors with clear tool output — reproduce, classify, hypothesize, patch root cause, re-verify green. Use when the user pastes lint/tsc/test/build failures or says 修這個錯誤／測試過不了／type error／build 失敗. Reachable by `/next-task` on failing runs.
 ---
 
 # 修錯工作流程（Fix Workflow）
@@ -19,21 +19,9 @@ description: 修正 ESLint error、TypeScript type error、測試失敗、compil
 
 ## 技術棧偵測（Step 0）
 
-套用本 skill 前，先判定目標專案技術棧：
-
-1. 讀 `package.json` dependencies（`vue`、`nuxt`、`next`、`react`、狀態庫等）與 `scripts`（`lint`、`typecheck`、`test`、`build` 對應的實際指令）
-2. 讀 `AGENTS.md` / `CLAUDE.md`（若存在）
-3. 檢查工具設定檔：`.eslintrc*` / `eslint.config.*`、`tsconfig.json`、`jest.config.*` / `vitest.config.*`、`playwright.config.*`、`nuxt.config.*` / `next.config.*` / `vite.config.*`
-4. 將結果記在內部上下文，再套用下方框架對照 overlay；**優先遵守專案既有規範與同目錄既有 pattern**，無文件時才用偵測到的框架預設慣例
-5. **`jest.config.*` 與 `vitest.config.*` 同時存在時（migration 中常見）**：以受影響測試檔所在目錄/模組裡既有測試實際使用的 runner 為準；無既有測試可參考時，先詢問使用者，不要自行猜測。
-
-| 抽象概念 | Vue 2 | Nuxt 3 | Next.js (App Router) |
-|----------|-------|--------|----------------------|
-| 元件狀態 | Options `data`/`computed`/`watch` | Composition `ref`/`computed`/`watch` | hooks / `useState` |
-| 全域狀態 | Vuex | Pinia | Zustand / Redux / server state |
-| 型別檢查 | `vue-tsc` / JS + JSDoc | `nuxi typecheck` / `vue-tsc` | `tsc --noEmit` |
-| 測試 runner | Jest | Vitest / Jest | Jest / Vitest |
-| i18n | vue-i18n `$t` | `@nuxtjs/i18n` | `next-intl` 等（依專案） |
+1. 讀 `package.json` 的 `scripts`（`lint`、`typecheck`、`test`、`build` 對應的實際指令）——本 skill 需要知道「重跑驗證」要用哪條指令。
+2. 讀並套用 [reference-stack.md](reference-stack.md)；優先專案既有 pattern。另檢查工具設定檔：`.eslintrc*` / `eslint.config.*`、`tsconfig.json`、`jest.config.*` / `vitest.config.*`、`playwright.config.*`。
+3. **`jest.config.*` 與 `vitest.config.*` 同時存在時（migration 中常見）**：以受影響測試檔所在目錄/模組裡既有測試實際使用的 runner 為準；無既有測試可參考時，先詢問使用者，不要自行猜測。
 
 ---
 

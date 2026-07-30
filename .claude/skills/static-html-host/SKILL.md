@@ -1,6 +1,7 @@
 ---
 name: static-html-host
-description: 臨時用 Python http.server +（可選）localtunnel 預覽靜態 HTML；tmux 常駐。使用時機：host HTML、開公開預覽、Cloud Agent 對外 tunnel、關掉預覽 server。不是正式部署。預覽完畢後須請使用者下指令關閉。
+description: 用 Python http.server（可選 localtunnel）臨時預覽靜態 HTML，非正式部署。
+disable-model-invocation: true
 ---
 
 # 靜態檔臨時 Host（Static HTML Host）

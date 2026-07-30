@@ -1,6 +1,6 @@
 ---
 name: e2e-test
-description: 撰寫端到端（E2E）瀏覽器測試，以 BDD Given/When/Then 為理論基礎——直接把 User Story 的驗收條件（AC）轉譯成情境，而不是另外發明一套測試規格。目前以 Playwright 為主要落地工具（可延伸至其他瀏覽器測試工具）。涵蓋 Page Object / fixture 慣例、role-based locator 策略、避免 manual sleep 與 flaky test。使用時機：使用者要幫某個 user flow / user story 寫「E2E 測試」、「端到端測試」、「Playwright 測試」，或要求把驗收條件轉成自動化情境。純函式/邏輯測試用 `unit-test`；單一元件渲染測試用 `vue-integration-test`/`react-integration-test`。
+description: 撰寫端到端（E2E）瀏覽器測試，以 Playwright 為主要工具，把 User Story 的驗收條件（Given/When/Then）直接轉譯成測試情境。使用時機：使用者要幫某個 user flow/user story 寫「E2E 測試」「端到端測試」「Playwright 測試」，或要求把驗收條件轉成自動化情境。純函式/邏輯測試用 unit-test；單一元件渲染測試用 vue-integration-test/react-integration-test。
 ---
 
 # E2E 測試撰寫指南（E2E Test Workflow）

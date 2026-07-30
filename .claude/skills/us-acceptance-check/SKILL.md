@@ -1,6 +1,6 @@
 ---
 name: us-acceptance-check
-description: 檢查 User Story 的驗收條件是否已於程式碼中實現，更新「驗收條件」檢核清單狀態，並將結果寫入 US 檔案的「驗收說明」區塊。不修改任何程式碼。適用場景：使用者想驗收某個 US、詢問「這個 US 過關了嗎」、「幫我驗收 US-XXX」、「確認 AC 是否完成」。
+description: 檢查 User Story 的驗收條件是否已於程式碼中實現，更新檢核清單並寫入「驗收說明」，不修改任何程式碼。使用時機：使用者想驗收某個 US、問「這個 US 過關了嗎」「幫我驗收 US-XXX」「確認 AC 是否完成」。Reachable by /next-task。
 ---
 
 # US 驗收條件檢查

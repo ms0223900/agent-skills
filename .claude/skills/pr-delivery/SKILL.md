@@ -1,6 +1,6 @@
 ---
 name: pr-delivery
-description: 將已完成的變更交付為 GitHub Pull Request：先呼叫／重用 `/change-report` 產出分層摘要，再 commit、push，並以 PR 模板建立或更新 draft PR。禁止直推 main／master。使用時機：Background／Cloud Agent 收尾、使用者說「幫我開 PR」「交付這次變更」「建立 pull request」、或 `/feature`／`/fix`／`/adjust`／`/refactor` 做完後進入交付階段。
+description: 將已完成的變更交付為 GitHub draft Pull Request，commit、push 並套用 PR 模板，禁止直推 main／master。使用時機：使用者說「幫我開 PR」「交付這次變更」「建立 pull request」，或 Cloud Agent 收尾。Reachable by /feature、/fix、/adjust、/refactor、/next-task（cloud 收尾）。
 ---
 
 # PR 交付（PR Delivery）
@@ -29,7 +29,7 @@ description: 將已完成的變更交付為 GitHub Pull Request：先呼叫／�
 
 - 本機互動開發、使用者未要求開 PR，且非 Background Agent → **不要**自動 commit／push／開 PR（與 `/next-task`「不自動 commit」一致）；可只跑 `/change-report` 把摘要給使用者自行貼。
 - 變更尚未驗證（測試紅燈、驗收 FAIL）→ 先修到可交付，再開 PR。
-- 目前已在 `main`／`master` 且有未推送 commit → **先開分支**再交付（Cloud → `/new-branch-cloud-agent`；本機 JIRA → `/new-branch-feature`），不要往主幹推。
+- 目前已在 `main`／`master` 且有未推送 commit → **先開分支**再交付：Cloud／Background → 呼叫 `/new-branch-cloud-agent`；本機有 JIRA → **暫停並請使用者手動執行** `/new-branch-feature`（該 skill 為 user-invoked，本 skill 無法代為觸發），再開本 skill。不要往主幹推。
 
 ---
 
@@ -52,7 +52,8 @@ description: 將已完成的變更交付為 GitHub Pull Request：先呼叫／�
 
 1. `git status -sb`、`git branch --show-current`、`git rev-parse --abbrev-ref HEAD`。
 2. **目前分支不得是** `main`／`master`（若專案主幹是 `develop` 且政策禁止直推，亦同）。若在主幹：
-   - 有未提交／未推送變更 → 先呼叫 `/new-branch-cloud-agent`（Cloud／Background）或 `/new-branch-feature`（本機有 JIRA），再繼續。
+   - Cloud／Background 且有未提交／未推送變更 → 先呼叫 `/new-branch-cloud-agent`，再繼續。
+   - 本機互動且有 JIRA → **停止**，請使用者手動執行 `/new-branch-feature`（user-invoked，本 skill 不可代呼），完成後再重跑本 skill。
    - 無法安全開分支 → 停止並說明，不要 push 主幹。
 3. 確認遠端與權限大致可用（`git remote -v`）；push／開 PR 失敗時依錯誤重試或回報，不要假裝已交付。
 4. 若專案有 `.github/PULL_REQUEST_TEMPLATE.md`，讀取作為 body 骨架；若無，使用本 skill「預設 PR body 骨架」。
@@ -172,7 +173,7 @@ git push -u origin HEAD
 | `/change-report` | **必要前置**：本 skill 消費其輸出當 PR body |
 | `/feature`／`/fix`／`/adjust`／`/refactor` | 實作收尾後，在觸發條件符合時呼叫本 skill |
 | `/pr-acceptance-checklist` | 開 PR 後可選 `for-review` 貼 comment；`for-pr-body` 由 `/change-report` 消費 |
-| `/new-branch-feature` | 本機開 `feature/{TICKET}`；與本 skill「不在主幹交付」互補 |
+| `/new-branch-feature` | 本機開 `feature/{TICKET}`（**user-invoked**：本 skill 只能請使用者手動執行，不可代呼） |
 | `/new-branch-cloud-agent` | Cloud／Background 開 `cursor/<name>-<suffix>`；在主幹上被攔截時優先用 |
 | `/next-task` | Epic 或 sprint 收尾時建議（或於 Cloud 執行）本 skill；中途單任務循環不自動開 PR |
 

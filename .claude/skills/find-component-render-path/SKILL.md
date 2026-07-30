@@ -1,6 +1,6 @@
 ---
 name: find-component-render-path
-description: 分析 UI 元素／組件的渲染邏輯（Vue SFC、Nuxt、Next.js JSX/TSX 等），說明如何觸發、注意事項與優化建議。適用於「這個元素怎麼渲染」、「如何叫出此區塊」等問題。
+description: Trace how a UI element/class renders and how to reveal it in the app. Use when the user asks 這個元素怎麼渲染／如何叫出此區塊. For behavior/data-flow bugs use `/quick-debug` instead.
 ---
 
 # 查找組件 / 元素渲染路徑
@@ -11,22 +11,7 @@ description: 分析 UI 元素／組件的渲染邏輯（Vue SFC、Nuxt、Next.js
 
 ## 技術棧偵測（Step 0）
 
-套用本 skill 前，先判定目標專案技術棧：
-
-1. 讀 `package.json` dependencies（`vue`、`nuxt`、`next`、`react`、狀態庫等）
-2. 讀 `AGENTS.md` / `CLAUDE.md`（若存在）
-3. 檢查框架設定：`nuxt.config.*`、`next.config.*`、`vite.config.*`、`vue.config.js`
-4. 將結果記在內部上下文，再套用下方框架對照 overlay；**優先遵守專案既有規範與同目錄既有 pattern**，無文件時才用偵測到的框架預設慣例
-
-| 抽象概念 | Vue 2 | Nuxt 3 | Next.js (App Router) |
-|----------|-------|--------|----------------------|
-| 元件狀態 | Options `data`/`computed`/`watch` | Composition `ref`/`computed`/`watch` | hooks / `useState` |
-| 全域狀態 | Vuex | Pinia | Zustand / Redux / server state |
-| 條件渲染 | `v-if` / `v-show` | 同左 | `{cond && …}` / early return |
-| 路由與守衛 | vue-router | Nuxt routes / middleware | App Router / middleware |
-| 共用邏輯 | mixins | composables | hooks / shared modules |
-| 卸載清理 | `beforeDestroy` / `destroyed` | `onUnmounted` | `useEffect` cleanup |
-| i18n | vue-i18n `$t` | `@nuxtjs/i18n` | `next-intl` 等（依專案） |
+讀並套用 [reference.md](reference.md)；優先專案既有 pattern。
 
 ## 使用時機
 

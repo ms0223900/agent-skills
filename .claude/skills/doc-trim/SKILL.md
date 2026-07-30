@@ -1,6 +1,7 @@
 ---
 name: doc-trim
-description: 針對已經寫成的 US／spec／playbook 等文件，回頭掃描並精簡「敘述性文字」的措辭（保留完整資訊，只改表達方式，不刪減任何實質內容），降低之後 AI 重複讀取這些檔案時的 token 成本。絕不修改機器解析用的結構元素（checkbox 標記、依賴鏈 ASCII 圖、heading 文字、watermark 章節等）——這些是 next-task／refactor-scan／distill-playbook 等技能仰賴 regex 解析的部分，動了會讓自動化判斷失效。使用時機：使用者說「這份 spec/US 太囉唆了，幫我精簡」、「這個 playbook 太長了，整理一下」、「這個 epic 的文件都精簡一下，省 token」；或 `next-task` 偵測到 epic/feature 收尾時建議使用者執行。
+description: 精簡既有 US／spec／playbook 文件的敘述性文字措辭，降低後續讀取的 token 成本，不動任何結構化／機器解析元素。
+disable-model-invocation: true
 ---
 
 # 文件精簡掃描（Doc Trim）
@@ -18,7 +19,9 @@ US／spec／playbook 這類文件會隨著多輪迭代（`ticket-to-ai-spec` 重
 **使用時機**：
 
 - 使用者說「這份 spec/US 太囉唆了，幫我精簡」、「這個 playbook 太長了，整理一下」、「這個 epic 的文件都精簡一下，省 token」。
-- `next-task` 偵測到 epic/feature 收尾時，會建議使用者執行本 skill（見該 skill Step 8）。
+- `next-task` 收尾時會指向 `/wrap-up`，其下列有本 skill。
+
+**安裝依賴**：本 skill 讀取 [next-task/reference.md](../next-task/reference.md) 的追蹤目錄解析；單裝時請一併安裝 `next-task`（見 repo README「安裝群組」）。
 
 **何時不用**：
 

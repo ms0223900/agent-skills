@@ -1,9 +1,11 @@
 ---
 name: refactor-scan
-description: 在 US/任務完成後，針對「這次改動＋前幾次相關改動」，依程式碼範圍（churn）、依賴鏈匯聚、反模式命中三個維度判斷是否已到重構時機；若判定需要，先把建議的重構範圍（沿用 refactor 的 Type×Size 詞彙）摘要給使用者確認，同意後才呼叫 `/refactor`。不自動、不強制執行重構，只負責「判斷該不該」，執行交給 `/refactor`。使用時機：`next-task` 在完成一個功能任務或修錯任務後自動呼叫；使用者手動呼叫 `/feature`、`/fix`、`/adjust` 完成後，也可自行呼叫本 skill，或直接問「這次改動要不要重構」、「最近這幾次改動是不是該整理一下」。
+description: 判斷「這次改動＋前幾次相關改動」是否已到重構時機，若判定需要則先徵求使用者確認才呼叫 /refactor，只負責判斷不執行。使用時機：使用者問「這次改動要不要重構」「最近這幾次改動是不是該整理一下」。Reachable by /next-task、/feature、/fix、/adjust（任務完成後）。
 ---
 
 # 重構時機掃描（Refactor Scan）
+
+**安裝依賴**：本 skill 透過相對路徑讀取 `next-task`／`refactor`／`distill-playbook` 的參考檔；單裝時請一併帶上（見 repo README「安裝群組」），否則 Step 1／3 會找不到 `../next-task/reference.md` 等檔案。
 
 ## 目標
 

@@ -1,6 +1,6 @@
 ---
 name: independent-review
-description: 對指定標的（一份 plan、一批尚未 commit 的變更、指定的 commit range、一組檔案）進行批判型獨立審查——另開 1~3 個全新、無主線對話記憶的 sub-agent，強迫它們自行從檔案／git diff／git log／相關文件重建脈絡，用「自我質疑」的方式挑錯，而非順著既有敘述確認「看起來沒問題」。只產出結構化發現報告，不修改任何檔案。使用時機：使用者明確要求「獨立 review」「找人 review 一下」「批判性檢查」，尤其是大規模重構、沒有過往文件可對照、相依性較多的修改，或涉及複雜演算法邏輯（如購物車計算）的新功能。
+description: 對指定標的（plan、未 commit 變更、commit range、一組檔案）進行批判型獨立審查，開全新無記憶的 sub-agent 重建脈絡並自我質疑找錯，只產出報告不改檔案。使用時機：使用者要求「獨立 review」「找人 review 一下」「批判性檢查」，尤其大規模重構、無文件可對照、或複雜演算法邏輯的新功能。Reachable by /ticket-to-ai-spec。
 ---
 
 # 獨立 Review Workflow

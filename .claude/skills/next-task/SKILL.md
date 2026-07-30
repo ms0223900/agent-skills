@@ -1,6 +1,6 @@
 ---
 name: next-task
-description: 依目前 git branch（或指定的 JIRA 單號）自動找出對應追蹤目錄中「依賴順序上下一個未完成的任務」，依任務類型分派至測試撰寫（`/unit-test`、`/vue-integration-test`、`/react-integration-test`、`/e2e-test`）、`/refactor`（提取/重構/拆分/搬移）、`/fix`（修正既有錯誤/bug）或 `/feature`（一般功能）實作，並尊重任務的「測試策略」欄位（Test-First 時明確告知實作對象「已有失敗測試待轉綠」），跑專案測試 runner 到全過（過程中若出現 lint/type/test/build 錯誤，交由 `/fix` 診斷修正），再呼叫 `/us-acceptance-check` 驗收該任務、呼叫 `/refactor-scan` 判斷是否已達重構時機（由其自行徵求確認後才分派 `/refactor`），並回填追蹤目錄 README 的「全域驗收 Checklist」。Epic 或 sprint 收尾時建議交付（`/change-report`／`/pr-delivery`）與知識沉澱。每次只處理一個任務，不會連續跑完整個 Phase。使用時機：使用者說「接下來要做什麼」、「下一個任務」、「next task」、「這個 branch 還有哪些沒做完」、「幫我把下一個 US/TASK 做完」、「sprint 收尾／這個 sprint 做完了」。
+description: 依目前 git branch（或指定 JIRA 單號）自動找出追蹤目錄中依賴順序上的下一個未完成任務並分派實作、測試、驗收，每次只處理一個任務，不會連續跑完整個 Phase。使用時機：使用者說「接下來要做什麼」、「下一個任務」、「next task」、「這個 branch 還有哪些沒做完」，或要 sprint/epic 收尾。
 ---
 
 # 尋找並實作下一個任務（Next Task Workflow）
@@ -153,8 +153,8 @@ description: 依目前 git branch（或指定的 JIRA 單號）自動找出對�
 
 #### 知識沉澱建議（交付建議之後）
 
-- **Epic／feature 收尾**時：建議之後另外執行 `/distill-playbook`；也可視情況執行 `/comment-trim` 與 `/doc-trim`。**不要**自己去動 playbook／CLAUDE.md／其他 skill 檔案，那是 `/distill-playbook` 的職責；也不要自己動手精簡註解或文件措辭（分別是 `/comment-trim`／`/doc-trim`）。
-- **僅 sprint 收尾、個別 epic 未收尾**：以交付建議為主；`/distill-playbook` 等知識沉澱等該 epic 真正收尾再建議，避免半成品經驗被寫進 playbook。
+- **Epic／feature 收尾**時：見 `/wrap-up`，建議使用者依需求另外手動執行。**不要**自己去動 playbook／CLAUDE.md／其他 skill 檔案，也不要自己動手精簡註解或文件措辭——那些都是各自 skill 的職責。
+- **僅 sprint 收尾、個別 epic 未收尾**：以交付建議為主；`/wrap-up` 底下的知識沉澱類 skill 等該 epic 真正收尾再建議，避免半成品經驗被寫進 playbook。
 
 其他：
 
@@ -179,7 +179,7 @@ description: 依目前 git branch（或指定的 JIRA 單號）自動找出對�
 
 - 已經明確知道要驗收哪一份 US/TASK 檔案，且不需要「找出下一個」也不需要動手實作 → 直接用 `/us-acceptance-check`。
 - 使用者已經明確描述好要調整的內容（不需要先幫他找任務）→ 用 `/adjust`（補充調整既有功能的固定流程）或直接 `/feature`／`/refactor`。
-- 想整併一整個 epic 收尾後的知識到 Playbook/Skill/CLAUDE.md → 用 `/distill-playbook`；本 skill 只在偵測到疑似收尾時「建議」使用者另外執行，不會自己動手整併。
+- 想整併一整個 epic 收尾後的知識到 Playbook/Skill/CLAUDE.md → 用 `/distill-playbook`（見 `/wrap-up`）；本 skill 只在偵測到疑似收尾時「建議」使用者另外執行，不會自己動手整併。
 - 只要開 PR／產出變更摘要、不需要找下一個任務 → 用 `/change-report`／`/pr-delivery`。
 - 需求文件都還沒拆成 User Story → 先用 `/user-stories`，本 skill 假設任務拆解已經存在。
 

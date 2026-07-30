@@ -1,6 +1,6 @@
 ---
 name: unit-test
-description: 撰寫框架無關的單元測試（純函式、utils、composables、hooks、store actions/mutations 等不涉及 DOM 渲染的邏輯），依專案偵測結果使用 Jest 或 Vitest。依循 FIRST 原則、AAA 結構、測試替身（dummy/stub/spy/mock/fake）分寸拿捏，並以 mutation test 自我驗證測試強度。使用時機：使用者要幫「某個函式/composable/hook/邏輯」寫單元測試，或說「這支 util 需要測試」。元件渲染/DOM 斷言請用 vue-integration-test（Vue）或 react-integration-test（React/Next）；瀏覽器端到端行為請用 e2e-test。
+description: 撰寫框架無關的單元測試（純函式、utils、composables、hooks、store actions/mutations 等不涉及 DOM 渲染的邏輯），依專案偵測使用 Jest 或 Vitest。使用時機：使用者要幫「某個函式/composable/hook/邏輯」寫單元測試，或說「這支 util 需要測試」。元件渲染／DOM 斷言請用 vue-integration-test 或 react-integration-test；瀏覽器端到端行為請用 e2e-test。
 ---
 
 # 單元測試撰寫指南（Unit Test Workflow）

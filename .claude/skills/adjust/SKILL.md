@@ -1,6 +1,6 @@
 ---
 name: adjust
-description: 用於補充調整既有功能：先更新 US、評估測試策略（Test-First / Test-After / 不寫測試需說明原因）、再實作、跑測試直到全過、最後驗收 US。不強制測試先行，但一定要交代測試何時補、補在哪裡，若不寫測試也要說明原因。適用 Vue、Nuxt、Next.js 等前端專案。使用時機：使用者提出補充需求或功能調整，例如「補一下 XXX」、「調整 XXX 的行為」、「這邊需要多支援 YYY」。
+description: Adjust an existing feature — update US, test strategy, implement, verify, accept. Use when the user asks to 補一下／調整行為／多支援某能力 for something already shipped.
 ---
 
 # 補充調整工作流程（Adjust Workflow）
@@ -13,22 +13,7 @@ description: 用於補充調整既有功能：先更新 US、評估測試策略�
 
 ## 技術棧偵測（Step 0）
 
-套用本 skill 前，先判定目標專案技術棧：
-
-1. 讀 `package.json` dependencies（`vue`、`nuxt`、`next`、`react`、狀態庫等）
-2. 讀 `AGENTS.md` / `CLAUDE.md`（若存在）
-3. 檢查框架設定：`nuxt.config.*`、`next.config.*`、`vite.config.*`、`vue.config.js`
-4. 將結果記在內部上下文，再套用下方框架對照 overlay；**優先遵守專案既有規範與同目錄既有 pattern**，無文件時才用偵測到的框架預設慣例
-
-| 抽象概念 | Vue 2 | Nuxt 3 | Next.js (App Router) |
-|----------|-------|--------|----------------------|
-| 元件狀態 | Options `data`/`computed`/`watch` | Composition `ref`/`computed`/`watch` | hooks / `useState` |
-| 全域狀態 | Vuex | Pinia | Zustand / Redux / server state |
-| 條件渲染 | `v-if` / `v-show` | 同左 | `{cond && …}` / early return |
-| 路由與守衛 | vue-router | Nuxt routes / middleware | App Router / middleware |
-| 共用邏輯 | mixins | composables | hooks / shared modules |
-| 卸載清理 | `beforeDestroy` / `destroyed` | `onUnmounted` | `useEffect` cleanup |
-| i18n | vue-i18n `$t` | `@nuxtjs/i18n` | `next-intl` 等（依專案） |
+讀並套用 [reference.md](reference.md)；優先專案既有 pattern。
 
 ---
 

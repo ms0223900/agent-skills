@@ -1,6 +1,7 @@
 ---
 name: new-branch-feature
-description: 從 master（或專案慣用主幹）建立本機用的 feature 分支 feature/{JIRA}。使用時機：使用者提供 JIRA 單號或 JIRA 網址（例如「幫我開 SPRD-614 的分支」）。Background／Cloud Agent 請改用 /new-branch-cloud-agent（cursor/<name>-<suffix>）。
+description: 從 master 建立本機用的 feature 分支 feature/{JIRA}。
+disable-model-invocation: true
 ---
 
 # 建立 feature 分支 (New Branch for Feature)

@@ -1,6 +1,6 @@
 ---
 name: ticket-to-ai-spec
-description: Transforms raw tickets into machine-readable AI Agent development specs by cleaning and structuring requirements, hardening logic and edge cases, and defining clear acceptance criteria and technical boundaries. 產出 spec 檔案後會自動呼叫 `/independent-review`，由獨立 sub-agent 對照現有程式碼核對 spec 假設、揪出可能擋住本次需求驗收的既有問題；與本次需求強相關（不修就無法驗收）的問題併入主 spec，其餘無直接依賴的問題/疑慮拆到獨立的「盤點問題」spec 檔案。若 ticket 屬於研究/非開發性質（以 issue type 如 `S：Non-Dev` 為主；僅有「預期產出」條列不足以判定），完整開發規格只作為技術附件，另外會產出一份格式對齊 ticket 自身「預期產出」的「研究結論」文件作為實際交付物。開發類 ticket 完成後，會主動引導使用者下一步呼叫 `/user-stories` 拆解成可執行任務，而不是直接建議進入實作。Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
+description: Transforms raw tickets into machine-readable AI Agent development specs by clarifying requirements and defining acceptance criteria and technical boundaries. Use when the user pastes ticket content or references tickets, user stories, or acceptance criteria and wants AI-ready implementation specs.
 ---
 
 # Ticket → AI 開發規格 / Ticket → AI Dev Spec
@@ -9,8 +9,6 @@ description: Transforms raw tickets into machine-readable AI Agent development s
 
 - **Goal**: 從零散、含糊的 Ticket 提煉出 **機器可理解（Machine-Readable）** 的開發規格，供 AI Agent 實作、寫測試或拆任務。
 - **Scope**: 只做需求抽取與規格化，不做程式碼實作（由其他 feature/implementation 流程處理）。
-
-啟用時，Agent 扮演 **Technical PM / 系統分析師**，把 Ticket 轉成精準、結構化的規格。
 
 ---
 
@@ -24,42 +22,17 @@ description: Transforms raw tickets into machine-readable AI Agent development s
 
 若只是問「這個 Ticket 在說什麼？」且無後續開發需求，只做摘要即可，不必跑完整流程。
 
----
-
-## Role & Global Instructions / 角色與全域指引
-
-解析 Ticket 時內化以下設定（內部工作流程；步驟細節見下方 Workflow，不必對使用者逐字複述）：
-
-```markdown
-# Role: 技術產品經理 (Technical PM)
-
-# Context: 從 Ticket 提取資訊並轉化為 AI Agent 可執行的規格書。
-
-## 任務步驟大綱（細節見下方 Workflow，勿在此重複展開）：
-
-1. 收集輸入 → 判定類型（開發 / 研究·非開發）
-2. 規格化
-   ├─ Context（Problem / Goal / Impacted Areas / Stakeholders）
-   ├─ User Stories（依角色）→ 複雜度再拆
-   ├─ Functional Specs → AC（含錯誤＋邊界）→ Technical Boundaries
-   ├─ MVP 判定 → 風險分類
-   └─ 存檔主 spec
-3. 獨立審查 → 阻塞併入主 spec / 弱相關拆 -issues
-4. （僅研究·非開發）產出「研究結論」交付物
-5. 導引下一步：開發類 → /user-stories；研究類 → 交研究結論
-
-## 輸出限制：
+啟用時，Agent 扮演 **Technical PM / 系統分析師**；解析 Ticket 時內化以下輸出限制（適用於下方所有 Workflow 步驟）：
 
 - 禁止「優化」、「提升」、「改善」等模糊動詞，改用具體行為與指標。
 - 必須分析資料／API 層並給出明確結論：要嘛寫出欄位定義或 Request/Response，要嘛明確寫「本次無資料層／API 變動，理由：…」。禁止用「不適用」靜默跳過，也禁止杜撰不存在的欄位。
 - 敘述性文字（Context 摘要、風險說明等）力求精簡：勿複述其他章節（User Story、AC、技術邊界）已寫過的內容；多輪釐清後重新產出 spec 時，勿原封搬入舊版鋪陳導致越改越長。
-```
 
 ---
 
 ## Workflow / 操作流程
 
-每次使用本 skill 依下列步驟行動。
+每次使用本 skill 依下列步驟行動（總覽：收集輸入 → 判定類型 → 規格化 Context/US/Functional Specs/AC/技術邊界/MVP/風險 → 存檔 → 獨立審查 → 分流回填 → 研究類額外交付 → 導引下一步）。
 
 ### Step 0: 判斷 Ticket 類型（研發 vs 研究/非開發）
 
@@ -231,64 +204,9 @@ Step 11 完成後**額外**執行：
 
 ## Output Format / 輸出格式
 
-產出 AI Agent 開發規格時，預設用下列結構（可增減小節，頂層標題與節號保持一致）。常態為第 **0～6** 節；第 **7** 節僅 Step 11 有強相關阻塞時附加。
+主 spec 常態為第 **0～6** 節（Context / User Stories / Functional Specs / AC / Technical Boundaries / MVP / 資訊缺失與風險）；第 **7** 節（阻塞問題）僅 Step 11 判定有強相關阻塞時附加。
 
-```markdown
-0. Context
-
-   - Problem: ...
-   - Goal: ...
-   - Impacted Areas: ...
-   - Stakeholders: ...
-
-1. 核心 User Story (Core User Stories)
-
-   - 列出 1~N 條 User Story：
-     - As a ...
-     - As a ...
-
-2. 功能細節 (Functional Specs)
-
-   - For Story A:
-     - [條列說明前端/後端/資料流程的具體行為]
-   - For Story B:
-     - ...
-
-3. 驗收標準 (Acceptance Criteria, AC)
-
-   - For Story A:
-     - Scenario 1: Given ... When ... Then ...
-   - For Story B:
-     - ...
-
-4. 技術邊界 (Technical Boundaries)
-
-   - DB Schema:
-   - API & Permissions:
-   - External Services:
-   - Performance / SLO:
-
-5. MVP 判定 (MVP vs Later)
-
-   - Story A: MVP: true, 說明...
-   - Story B: MVP: false, 原因...
-
-6. 資訊缺失與風險 / 注意事項 (Missing Info / Risks / Notes)
-
-   - **一、開發實作時應注意 (Implementation-time Concerns)**
-     - [實作時必須處理或檢查的技術細節]
-   - **二、規格與需求灰區 (Spec-level Gaps / Pre-dev Questions)**
-     - [開發前需由 PM/UX/架構師先回答的規格缺失]
-   - **三、動態詢問與邊界調整 (Runtime/Dynamic Clarifications)**
-     - [遇邊界案例時應暫停並與 PM/UX 同步的項目]
-
-7. ⚠️ 需求前置阻塞問題 (Blocking Issues from Independent Review)（僅 Step 11 判定有強相關問題時才新增此節）
-
-   - 問題 1：[標題]
-     - 證據：`path/to/file` 行號 / 具體說明
-     - 影響：擋住哪一條 AC（對應 Story/Scenario）
-   - （若有其他非阻塞問題被拆到獨立檔案）另見：`<spec 檔名>-issues.md`
-```
+> **完整章節模板見 [reference-output.md](reference-output.md) 第一節**——撰寫或存檔主 spec 前先讀該節，逐節填入，不要自行簡化章節結構。
 
 此結構於 Step 1～9 完成即可產出第 0～6 節；第 7 節是 Step 10/11 審查後才決定是否補上的**附加**章節。
 
@@ -298,9 +216,7 @@ Step 11 完成後**額外**執行：
 
 - **預設檔案輸出**
   - 完成規格後，若環境允許寫入，預設存為 Markdown 至 `docs/specs`。
-  - 檔名建議：
-    - JIRA：`<ISSUE_KEY>-<short-slug>.md`（如 `PROJ-123-checkout-apple-pay.md`）。
-    - 非 JIRA：日期 + 短描述（如 `2026-03-04-checkout-query-tuning.md`）。
+  - 檔名建議：JIRA 用 `<ISSUE_KEY>-<short-slug>.md`（如 `PROJ-123-checkout-apple-pay.md`）；非 JIRA 用日期 + 短描述（如 `2026-03-04-checkout-query-tuning.md`）。
   - 使用者要求不存檔或指定其他路徑時，依其指示覆蓋預設。
 
 - **同一 Ticket 重跑／更新**
@@ -310,23 +226,7 @@ Step 11 完成後**額外**執行：
 
 - **獨立審查後更新（Step 10/11）**
   - **強相關（阻塞）**：改寫主 spec，補第 7 節與對應 AC 註記，**不建新檔**。
-  - **弱相關（非阻塞）**：另存「盤點問題」檔，主 spec 檔名加 `-issues`：
-    - JIRA：`<ISSUE_KEY>-<short-slug>-issues.md`（如 `PROJ-123-checkout-apple-pay-issues.md`）。
-    - 非 JIRA：`<原檔名去除副檔名>-issues.md`。
-    - 內容格式（每問題為未來可能開單的線索，不必完整比照主 spec 第 0～6 節）：
-      ```markdown
-      # {ISSUE_KEY} 盤點問題與疑慮（非本次需求阻塞項）
-
-      > 由 `/independent-review` 對本次 spec 進行獨立審查時額外盤點到、但與本次需求驗收無直接依賴的問題。可視情況另開 ticket 處理，不阻塞本次驗收。
-
-      ## 問題 1：{標題}
-
-      - **來源視角**：{獨立審查的視角 A/B/C 或查證項目}
-      - **問題描述**：...
-      - **證據**：`path/to/file` 行號 / 具體說明
-      - **建議後續**：例如「另開 ticket」「列入下個 sprint 的 tech debt」
-      ```
-    - 主 spec 在第 6 節或新增第 7 節末端加一行：「另見 `<檔名>-issues.md`，盤點到的非阻塞問題」。
+  - **弱相關（非阻塞）**：另存「盤點問題」檔，主 spec 檔名加 `-issues`（JIRA：`<ISSUE_KEY>-<short-slug>-issues.md`；非 JIRA：`<原檔名去除副檔名>-issues.md`）。**完整內容模板見 [reference-output.md](reference-output.md) 第二節**——寫這份檔案前先讀該節。主 spec 在第 6 節或新增第 7 節末端加一行連結。
   - 兩者皆無 → 不建 `-issues.md`、不新增第 7 節，維持第 0～6 節。
   - **注意**：`-issues.md` 不是主規格；下游 `next-task` 解析 `docs/specs/{KEY}-*.md` 時應排除 `*-issues.md`（見該 skill）。
 
@@ -348,23 +248,9 @@ Step 11 完成後**額外**執行：
 
 ---
 
-## Examples / 使用範例（簡化示意）
+## Examples / 使用範例
 
-當使用者說：
-
-> 請分析以下 Ticket 內容，並產出 AI Agent 開發規格：  
-> 「User report slow checkout, need to add Apple Pay and reduce checkout query latency on the payment confirmation path」
-
-依前述 Workflow 輸出類似結構（實際需更完整；以下為合規範例，**勿**把模糊動詞或未在 Ticket 出現的數字寫進規格）：
-
-- Context／Impacted Areas：checkout 頁、付款確認 API、訂單狀態、第三方支付整合點。
-- 核心 User Story：玩家希望可以使用 Apple Pay 完成結帳，以便縮短結帳等待時間。
-- 功能細節：新增 Apple Pay 支付流程、授權成功後將訂單狀態更新為 `PAID`、寫入交易紀錄；針對付款確認路徑的查詢列出具體調整建議（例如候選 index／查詢條件），未核准前不改 schema。
-- 驗收標準：Given 使用者在 checkout 頁面選擇 Apple Pay，When 授權成功，Then 訂單狀態為 `PAID` 且導向成功頁（如 `/dashboard`）。另補錯誤與邊界（授權失敗、重複提交等）。
-- 技術邊界：需與第三方支付供應商整合；DB index 是否調整標「可能需要討論」。效能數字若 Ticket 未給，標「缺少效能指標」，勿杜撰。
-- MVP 判定：Apple Pay 支付為 MVP；付款確認路徑以外的報表類查詢調整列為後續（`MVP: false`）。
-
-此範例僅作思路參考，實作時仍依實際 Ticket 完整展開。
+簡化示意範例（Apple Pay checkout ticket）見 [reference-output.md](reference-output.md) 第三節，僅作思路參考，實作時仍依實際 Ticket 完整展開。
 
 ---
 

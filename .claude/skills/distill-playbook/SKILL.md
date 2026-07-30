@@ -1,6 +1,7 @@
 ---
 name: distill-playbook
-description: 整個 feature / epic（一系列 TASK 或 user story）全部完成收尾時，把散落在各 TASK/US 文件「驗收說明」裡的經驗、決策、已知陷阱，蒸餾整併進對應的 Playbook / Skill / CLAUDE.md，避免知識停留在單一任務文件裡而不可複用。使用時機：使用者說「這個 feature/epic 做完了，整理一下經驗」、「更新 playbook」、「把這些 TASK 的心得收斂一下」，或一系列 TASK/US 全數完成、準備收尾時。不適用於單一 TASK 完成後的紀錄（那是 feature/refactor skill 的「即時蒸餾」，寫在該 TASK/US 文件自己的「驗收說明」即可，不需要整併）。
+description: feature/epic 收尾時，把散落在各 TASK/US 文件「驗收說明」裡的經驗與陷阱，蒸餾整併進 Playbook／Skill／CLAUDE.md。
+disable-model-invocation: true
 ---
 
 # 蒸餾 Playbook（巨蒸餾）

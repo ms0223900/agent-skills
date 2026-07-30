@@ -1,6 +1,6 @@
 ---
 name: new-branch-cloud-agent
-description: 為 Cursor Background／Cloud Agent 建立符合雲端慣例的工作分支（cursor/<descriptive-name>-<suffix>），禁止在 main／master 上直接開發或推送。使用時機：Cloud／Background Agent 開工前、系統指示要求 cursor/ 前綴分支、或使用者說「開雲端分支」「cloud agent 分支」。本機依 JIRA 開 feature/{TICKET} 請用 /new-branch-feature。
+description: 為 Cursor Background／Cloud Agent 建立符合雲端慣例的工作分支（cursor/<name>-<suffix>），禁止在 main／master 上直接開發或推送。使用時機：Cloud／Background Agent 開工前、系統指示要求 cursor/ 前綴分支、或使用者說「開雲端分支」「cloud agent 分支」。本機依 JIRA 開分支請用 /new-branch-feature。Reachable by /pr-delivery。
 ---
 
 # 建立 Cloud Agent 分支（New Branch for Cloud Agent）
