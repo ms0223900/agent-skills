@@ -59,6 +59,15 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 | `new-branch-feature` | 依 JIRA 單號從 master 開 feature 分支 |
 | `weekly-branch-report` | 依作者與日期整理「已合併 uat / 進行中」分支週報 |
 
+### 決策釐清
+
+| Skill | 說明 |
+|-------|------|
+| `grill-me` | 手動入口；呼叫後轉入 `grilling` |
+| `grilling` | 對方案、決策或想法逐題壓力測試，達成共識前不執行 |
+
+`ticket-to-ai-spec`、`feature`、`refactor` 會在規格或架構仍有多個關鍵決策時暫停並建議使用 `/grilling`；不會在執行中偷偷自動完成訪談。
+
 ### 實作
 
 | Skill | 說明 |
@@ -101,11 +110,14 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 ```
 .claude/skills/
 ├── feature/SKILL.md
+├── grill-me/SKILL.md
+├── grilling/SKILL.md
 ├── next-task/SKILL.md
 ├── unit-test/
 │   ├── SKILL.md
 │   └── reference-*.md
 └── ...
+skills-lock.json             # 第三方 skill 來源與版本雜湊
 ```
 
 每個 skill 是一個目錄，至少包含 `SKILL.md`（YAML frontmatter + 指示）。Skills CLI 會自動發現 `.claude/skills/`。

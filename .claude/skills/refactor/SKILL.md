@@ -65,13 +65,22 @@ description: Guides code refactoring (feature, style, architecture) by assessing
 ### Step 2: 規劃分流 / Plan or Proceed
 
 - **Small**：簡述方案後直接實作
-- **Medium / Large**：優先切換到 **Plan 模式**，產出：
+- **Medium / Large**：先執行下方「決策釐清導流」，再決定是否切換到 **Plan 模式**；進入 Plan 時產出：
   1. 現況與問題
   2. 目標架構與分層
   3. 實作步驟與風險點
   4. 建議分批範圍（若有）
 
 若範圍過大，請使用者協助 **切分為可獨立的小階段**，再分次執行。
+
+#### 決策釐清導流 / Grilling Gate
+
+- 僅在 Medium / Large 且仍有會改變目標架構、重構邊界或分階段方式的使用者決策時觸發；可由程式碼或工具查證的事實應直接查，不要拿來詢問使用者。
+- 若有 2 個以上相依的決策分支、互斥方案尚未取捨，或第一階段範圍未定：
+  1. **暫停**進入 Plan 與改碼。
+  2. 精簡列出未決事項，建議使用者先執行 `/grilling`。
+  3. 不要在本 skill 內偷偷完成 grilling；等使用者確認共識已達，或明確選擇略過，才繼續 Plan。
+- Small 重構，以及方向已定、只剩機械性執行細節的 Medium / Large 重構，不導流到 grilling。
 
 ### Step 3: 實作前檢查 / Pre-implementation
 
