@@ -39,7 +39,7 @@ description: 判斷「這次改動＋前幾次相關改動」是否已到重構�
 
 ### Step 1：解析追蹤目錄與掃描範圍
 
-1. 依 [next-task/reference.md](../next-task/reference.md) §一的追蹤目錄解析演算法，找出目前分支/任務對應的追蹤目錄。**找不到追蹤目錄**（例如非 US 驅動的臨時任務）→ 改用純 git 模式：以「目前未提交的異動」（`git status`/`git diff`）加上使用者訊息中提到的相關檔案作為掃描範圍，跳過本步驟剩餘的水位線邏輯，直接進 Step 2。
+1. 依 [next-task/reference.md](../next-task/reference.md) §一的 Resolve ladder，找出目前分支/任務對應的追蹤目錄。**找不到追蹤目錄**（例如非 US 驅動的臨時任務）→ 改用純 git 模式：以「目前未提交的異動」（`git status`/`git diff`）加上使用者訊息中提到的相關檔案作為掃描範圍，跳過本步驟剩餘的水位線邏輯，直接進 Step 2。
 2. 判斷該目錄是 **README 驅動型**（有「全域驗收 Checklist」＋「依賴鏈摘要」）還是**無 Checklist 型**（見 next-task/reference.md §二）。
 3. **讀取水位線**（格式見 [reference.md](reference.md) §二）：
    - README 驅動型：找 README 內「## 重構掃描記錄」章節。不存在 → 視為首次掃描，範圍＝目前剛完成的任務＋目錄內順序上更早的所有已完成任務。存在 → 範圍＝水位線記錄的「已掃描至」任務之後、到目前剛完成任務為止的所有已完成任務（若中間沒有新完成任務，範圍只有目前這一個）。

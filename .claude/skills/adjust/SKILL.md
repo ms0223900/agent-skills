@@ -21,10 +21,9 @@ description: Adjust an existing feature — update US, test strategy, implement,
 
 ### Step 1：找出對應 US 目錄
 
-1. 讀取目前的 git branch 名稱（`git branch --show-current`）。
-2. 從 branch 名稱中擷取 ticket ID，例如 `feature/SPRD-965` → `SPRD-965`。
-3. **US 目錄慣例不只一種**，依 `next-task`／`us-acceptance-check` 的預設，優先檢查 `docs/user-stories/{TICKET_ID}*/`；若不存在才檢查 `docs/specs/{TICKET_ID}/us/`。兩者都不存在時，看專案內既有的其他 ticket 目錄實際用哪一種慣例，沿用該慣例；都沒有既有慣例可循時，預設用 `docs/user-stories/{TICKET_ID}/`（與 `next-task`／`us-acceptance-check` 的預設一致）。列出找到的目錄下所有 US 檔案。
-4. 根據使用者描述的調整內容，判斷：
+1. 依 [next-task/reference.md](../next-task/reference.md) §一 Resolve ladder 選定追蹤目錄（path → token 匹配 `^{token}(-.+)?$` case-insensitive → token legacy → scan；**不用** `{TICKET}*/` startswith glob）。
+2. 列出該目錄下所有 US／任務檔案。
+3. 根據使用者描述的調整內容，判斷：
    - 哪些既有 US 需要修改（調整驗收條件或描述）
    - 是否需要新增一份 US（若調整範圍超出現有 US 涵蓋）
 
@@ -60,8 +59,7 @@ description: Adjust an existing feature — update US, test strategy, implement,
 **相關功能**：...
 ```
 
-- 存檔路徑：`docs/specs/{TICKET_ID}/us/US-0X-{slug}.md`
-- 命名序號接續現有最大編號。
+- 存檔路徑：寫入 Step 1 選定的追蹤目錄（`US-0X-{slug}.md`）；序號接續現有最大編號。
 
 ---
 
@@ -128,7 +126,8 @@ description: Adjust an existing feature — update US, test strategy, implement,
 
 ## 注意事項
 
-- US 目錄慣例依專案而定：優先 `docs/user-stories/{TICKET_ID}*/`，其次 `docs/specs/{TICKET_ID}/us/`（見 Step 1）；同一個專案內找到既有慣例後就沿用，不要混用兩種路徑。
+- US 目錄以 Resolve ladder 為準（見 Step 1／`next-task` reference §一）：`*/user-stories/<slug>/` 優先，token legacy 才用 `docs/specs/...`；同一個專案內選定後沿用，不要混用兩種路徑。
+- 新增 US 存檔：優先寫入 Step 1 選定的追蹤目錄；若該目錄是 legacy `docs/specs/{token}/us/`，檔名 `US-0X-{slug}.md` 序號接續現有最大編號。
 - 測試只確保功能範圍內的行為正確，不做「防禦性全面覆蓋」。
 - 測試先或後由 Step 3 判定，不再無條件先寫測試；但「不寫測試」永遠要附理由，不可以悄悄跳過不提。
 - 若評估後發現調整幅度過大，暫停實作，先與使用者確認切分範圍。
