@@ -153,7 +153,7 @@ description: Resolve 出 */user-stories/* 追蹤目錄中下一個未完成任�
 - **README 打勾但任務檔案本身沒有「驗收說明」，或反過來**：以任務檔案自己的實際狀態為準（見 Step 2 的 cross-check），並在回報中指出 README 與檔案不同步的落差。
 - **下一個候選任務的依賴未滿足**：一律跳過、continue 往下找；若全部卡住就照實回報並停止。
 - **任務被標成需要人工/PM 決策**（如 SPRD-660 的「PO／Release 簽核為準」）：視為不可自動推進，回報並停止。
-- **僅有純規格檔、無任務拆解**（fallback §1.6）：建議先 `/user-stories`。
+- **僅有純規格檔、無任務拆解**（token legacy §1.6）：建議先 `/user-stories`。
 
 ---
 
