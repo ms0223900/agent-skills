@@ -89,13 +89,13 @@
 
 | 主題 | 本 skill 怎麼用 | 權威來源（不重複維護，改動時只改來源） |
 |---|---|---|
-| 追蹤目錄解析演算法（4 層候選、glob 陷阱） | SKILL.md Step 1 直接引用 | [next-task/reference.md](../next-task/reference.md) §一 |
+| Resolve ladder（選定追蹤目錄） | SKILL.md Step 1 直接引用 | [next-task/reference.md](../next-task/reference.md) §一 |
 | 文件形態判讀（README 驅動型 / 無 Checklist 型） | SKILL.md Step 1 直接引用 | next-task/reference.md §二 |
 | 驗收說明 heading 偵測（`^#{2,4}\s*驗收說明`） | SKILL.md Step 2 讀取任務檔案時使用 | next-task/reference.md §五 |
 | 依賴鏈 ASCII 圖判讀規則 | SKILL.md Step 3 / 本檔案 §一.二 直接引用 | next-task/reference.md §四 |
 | 反模式表（Feature/Style/Architecture、組件拆分原則） | SKILL.md Step 3 / 本檔案 §一.三 直接引用 | [refactor/reference.md](../refactor/reference.md) 全篇 |
 | Type（Feature/Style/Architecture）× Size（Small/Medium/Large）判斷 | SKILL.md Step 4 / 本檔案 §一.四 沿用同一套詞彙 | [refactor/SKILL.md](../refactor/SKILL.md) Step 1 |
-| 「附上任務全文作為 context」呼叫慣例 | SKILL.md Step 5 呼叫 `/refactor` 時沿用同樣的交接方式 | next-task/SKILL.md Step 4 分派表 |
+| 「附上任務全文作為 context」呼叫慣例 | SKILL.md Step 5 呼叫 `/refactor` 時沿用同樣的交接方式 | next-task/SKILL.md Step 3 分派表 |
 | watermark／避免重複勞動的概念 | 本檔案 §二整體設計參考自 distill-playbook 的「取材自 TASK-xxx ~ TASK-yyy」，但寫入位置與格式是本 skill 專屬（追蹤目錄 README 的「重構掃描記錄」章節，不是 Playbook） | [distill-playbook/SKILL.md](../distill-playbook/SKILL.md) Step 1/6 |
 
 若上述任一來源檔案的規則有調整（例如依賴圖判讀規則新增了一種圖形樣式），本 skill 不需要跟著改，執行時直接讀取當下最新版本的來源檔案即可。
