@@ -1,41 +1,29 @@
 ---
 name: next-task
-description: 依目前 git branch（或指定 JIRA 單號）自動找出追蹤目錄中依賴順序上的下一個未完成任務並分派實作、測試、驗收，每次只處理一個任務，不會連續跑完整個 Phase。使用時機：使用者說「接下來要做什麼」、「下一個任務」、「next task」、「這個 branch 還有哪些沒做完」，或要 sprint/epic 收尾。
+description: Resolve 出 */user-stories/* 追蹤目錄中依賴順序上的下一個未完成任務並分派實作、測試、驗收（每次只處理一個）。Feature branch 用 branch／ticket token 匹配；main 則 scan 後以 commit 收斂。使用時機：下一個任務／next task、這個 branch 還有哪些沒做完、sprint／epic 收尾。
 ---
 
 # 尋找並實作下一個任務（Next Task Workflow）
 
 ## 目標
 
-在不需要使用者手動指定「要做哪個 US/TASK」的前提下，依序完成：**定位追蹤目錄 → 找出依賴順序上的下一個未完成任務 → 依任務性質分派實作 → 測試全過 → 驗收該任務 → 回填追蹤目錄進度 → 停下回報**。本 skill **只處理一個任務**，不會自動連續往下做完整個 Phase 或整個 epic。
+在不需要使用者手動指定「要做哪個 US/TASK」的前提下，依序完成：**resolve 追蹤目錄 → 找出依賴順序上的下一個未完成任務 → 依任務性質分派實作 → 測試全過 → 驗收該任務 → 回填追蹤目錄進度 → 停下回報**。本 skill **只處理一個任務**，不會自動連續往下做完整個 Phase 或整個 epic。
 
 ---
 
 ## 執行流程
 
-### Step 1：解析 Ticket Key
+### Step 1：Resolve 追蹤目錄
 
-1. 若使用者直接給了 ticket key（格式 `[A-Z]+-[0-9]+`，例如 `SPRD-1336`），直接使用。
-2. 否則讀取目前 branch：`git branch --show-current`，用同樣的正則從 branch 名稱擷取 ticket key（例如 `feature/SPRD-1336` → `SPRD-1336`）。
-3. 若兩者都無法取得有效 key，停下並請使用者提供 ticket key 或切換到正確的 feature branch。
+依 [reference.md](reference.md)「一、Resolve ladder」選定恰好一個 `*/user-stories/<slug>/`（規則與合法判定、commit 收斂、舊路徑 fallback 全在該節）：
 
-### Step 2：定位追蹤目錄候選
+1. 使用者給了 path／任務檔 → 用該目錄。
+2. 有 ticket key，或 branch 不是 `main`／`master` → 取 token，匹配 `*/user-stories/*/` 目錄名（`^{token}(-.+)?$`）。
+3. 否則（在 main／master，或 token 無命中）→ **scan** 全部 `*/user-stories/*/`。
 
-依 [reference.md](reference.md) 的「追蹤目錄解析演算法」，收集第 1～3 層**全部**實際存在的候選目錄（不論跨哪一層，不是找到第一個就停）：
+候選池就緒後：0 個 unfinished → 回報並停；恰好 1 個 → 自動選；≥2 個 → 用 commit／working tree 收斂到 1 個，仍無法唯一 → 列出完成度摘要請使用者指定後停。
 
-1. `docs/user-stories/{KEY}*/`（可能有多個後綴變體，例如 `{KEY}-PHASE2`）
-2. `docs/specs/{KEY}/us/`
-3. `docs/specs/{KEY}-user-stories/`
-4. `docs/specs/{KEY}-*.md`（純規格檔，無任務拆解——只有在 1～3 都不存在時才當作唯一線索；**排除** `*-issues.md` 盤點問題附檔）
-
-對每個第 1～3 層候選，依 reference.md 的規則跑一次「找下一個任務」演算法，判斷「是否仍有未完成任務」。
-
-**決策規則**：
-
-- 找不到任何候選 → 明確告知使用者「找不到 {KEY} 的任何追蹤文件」，建議依序執行 `/ticket-to-ai-spec` 和/或 `/user-stories`，然後停止。
-- 只有第 4 類（純規格檔）候選 → 告知使用者只有規格、沒有任務拆解，無法自動判定下一個任務，建議先執行 `/user-stories` 拆解，然後停止。
-- 恰好 1 個候選「仍有未完成任務」，其餘皆已收尾 → 自動選用該候選，並向使用者說明為什麼（例如：「`docs/user-stories/SPRD-1336/` 已全數收尾，改用仍在進行中的 `docs/user-stories/SPRD-1336-PHASE2/`」）。
-- 超過 1 個候選「仍有未完成任務」→ **不要自行猜測**，列出所有候選目錄與各自的完成度摘要，請使用者指定要用哪一個，然後停止等待回覆。
+**完成條件**：已選定恰好一個追蹤目錄，或已停下並向使用者列出選項／原因。
 
 ### Step 3：在選定目錄中找出下一個未完成任務
 
@@ -166,12 +154,12 @@ description: 依目前 git branch（或指定 JIRA 單號）自動找出追蹤�
 
 ## 邊界情況
 
-- **完全找不到追蹤文件**：見 Step 2，建議 `/ticket-to-ai-spec` 和/或 `/user-stories`，停止。
-- **多個追蹤目錄候選都還有未完成任務**：見 Step 2，列出候選讓使用者選，不要猜。
+- **完全找不到追蹤文件／全收尾**：見 Step 1（reference §1.4）；建議 `/ticket-to-ai-spec` 和/或 `/user-stories`，停止。
+- **多個 unfinished 且 commit 無法唯一收斂**：見 Step 1（reference §1.5）；列出候選讓使用者選。
 - **README 打勾但任務檔案本身沒有「驗收說明」，或反過來**：以任務檔案自己的實際狀態為準（見 Step 3 的 cross-check），並在回報中指出 README 與檔案不同步的落差。
-- **下一個候選任務的依賴未滿足**：一律跳過、continue 往下找，永遠不要為了「有事做」而略過依賴直接動工；若全部卡住就照實回報並停止。
-- **任務被標成需要人工/PM 決策**（如 SPRD-660 的「PO／Release 簽核為準」）：視為不可自動推進，回報並停止，不要替 PO/PM 做決定。
-- **純規格檔、無任務拆解**：不強行猜測任務邊界，建議先 `/user-stories`。
+- **下一個候選任務的依賴未滿足**：一律跳過、continue 往下找；若全部卡住就照實回報並停止。
+- **任務被標成需要人工/PM 決策**（如 SPRD-660 的「PO／Release 簽核為準」）：視為不可自動推進，回報並停止。
+- **僅有純規格檔、無任務拆解**（fallback §1.6）：建議先 `/user-stories`。
 
 ---
 
@@ -187,4 +175,4 @@ description: 依目前 git branch（或指定 JIRA 單號）自動找出追蹤�
 
 ## Additional Resources
 
-- 追蹤目錄解析演算法、checkbox 正規化表、依賴圖判讀規則、完整範例：見 [reference.md](reference.md)
+- Resolve ladder、文件形態、checkbox 正規化、依賴圖、範例：見 [reference.md](reference.md)

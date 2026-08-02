@@ -1,28 +1,64 @@
 # Next Task Reference
 
-## 一、追蹤目錄解析演算法（4 層候選）
+## 一、Resolve ladder（選定追蹤目錄）
 
-### 1.1 逐層規則
+**Resolve**：依固定 **ladder** 選出恰好一個追蹤目錄；命中即停。
 
-| 層級 | 路徑樣式 | 任務清單來源 | 依賴/順序來源 |
-|---|---|---|---|
-| 1 | `docs/user-stories/{KEY}*/` | 目錄下 `README.md`（若有）+ 個別任務 `.md` | README 的表格「順序」欄 + 「依賴鏈摘要」，或無 README 表格時看各任務檔內文字依賴 |
-| 2 | `docs/specs/{KEY}/us/US-*.md` | `US-*.md` 檔名序 | README（若有）或各檔「依賴關係」欄 |
-| 3 | `docs/specs/{KEY}-user-stories/US-{KEY}-NNN-*.md` | 同上 | 同上 |
-| 4 | `docs/specs/{KEY}-*.md`（排除目錄，只算檔案；**排除** `*-issues.md`——那是 `/ticket-to-ai-spec` 的盤點問題附檔，不是主規格） | 無 — 純規格文件，沒有任務顆粒度 | 不適用 |
+### 1.1 路徑契約與合法目錄
 
-### 1.2 glob 邊界陷阱（務必注意）
+追蹤目錄 = `*/user-stories/<slug>/`（例：`docs/user-stories/SPRD-1336/`、`docs/user-stories/career-news/`）。
 
-`{KEY}*` 是**前綴 glob**，比對時必須確保「KEY 之後接的是字串結尾或連字號」，不能是「數字延續」。例如 ticket key 是 `SPRD-133` 時，樸素的前綴比對會誤命中 `SPRD-1336`、`SPRD-1336-PHASE2`（因為字串 `"SPRD-1336"` 本身也是以 `"SPRD-133"` 開頭）。正確做法是用正則 `^{KEY}(-.+)?$` 比對目錄/檔名（去掉副檔名後），而不是單純的字串 `startswith`。
+**合法**：目錄內有 `README.md`，或至少一個任務檔（`US-*.md`／`P0-*.md`／`TASK-*.md`）。其餘丟棄。
 
-### 1.3 判斷「是否仍有未完成任務」
+任務清單與依賴來源：`README.md`（若有）+ 個別任務 `.md`；細節見「二、文件形態判讀」。
 
-- 第 1～3 層：依「二、文件形態判讀」跑一次「找下一個任務」演算法，只要能找到一個未完成任務（不論是否被依賴卡住），就算「仍有未完成任務」。
-- 第 4 層：永遠視為「無法判斷」，不計入「仍有未完成任務」或「已收尾」的候選比較，只在第 1～3 層都不存在時才被拿出來當作唯一線索。
+### 1.2 Ladder（依序）
 
-### 1.4 多候選比較
+| 階 | 條件 | 動作 |
+|---|---|---|
+| 1 | 使用者給了追蹤目錄 path，或某個任務 `.md` 檔路徑 | 該目錄即結果；結束 resolve |
+| 2 | 使用者給了 ticket key，**或**目前 branch 不是 `main`／`master` | 取出 **token**（§1.3）→ 在 `*/user-stories/*/` 中，`<slug>` 符合 `^{token}(-.+)?$` 的合法目錄進候選池 → §1.4 |
+| 3 | branch 是 `main`／`master`，或階 2 的 token 匹配不到任何合法目錄 | **Scan** 全部 `*/user-stories/*/` 合法目錄進候選池 → §1.4 |
 
-候選收集**不是分層停止**，而是同時把第 1～3 層所有實際存在的候選目錄／子資料夾（不論跨幾層、也不論是不是同一層內有多個變體，例如同一個 `docs/user-stories/{KEY}*/` glob 可能同時比對出 `SPRD-1336/` 與 `SPRD-1336-PHASE2/` 兩個）收進同一個池子，每一個都獨立依 1.3 判斷完成度，再統一套用 SKILL.md Step 2 的決策規則（唯一未收尾 → 自動選；多個未收尾 → 問使用者）。不同候選之間互不影響彼此的完成度判斷。
+Token 匹配必須用 `^{token}(-.+)?$`，不可用單純 `startswith`（`SPRD-133` 會誤命中 `SPRD-1336`）。
+
+### 1.3 Token（僅階 2）
+
+1. 使用者給的 ticket key，或從 branch 擷取 `[A-Z]+-[0-9]+`（例：`feature/SPRD-1336` → `SPRD-1336`）。
+2. 否則取 branch **slug**：去掉常見前綴（`feature/`、`cursor/`、`fix/`、`chore/` 等）與雲端後綴（`-` + 4～6 位英數，如 `-5ec2`），其餘小寫保留。
+
+### 1.4 從候選池選定
+
+對每個候選依「二、文件形態判讀」判斷是否仍有未完成任務（含被依賴卡住的；只要目錄內還有未完成項就算 unfinished）。已收尾者不進 unfinished 池。
+
+| 結果 | 動作 |
+|---|---|
+| 0 個合法，或 0 個 unfinished | 回報找不到／全收尾；建議 `/user-stories`（若完全無追蹤目錄可一併提 `/ticket-to-ai-spec`）；停止 |
+| 恰好 1 個 unfinished | 自動選用，並說明原因 |
+| ≥2 個 unfinished | 進入 §1.5 commit 收斂 |
+
+同 token 多變體（如 `SPRD-1336/` 與 `SPRD-1336-PHASE2/`）各自獨立判完成度，再套本表。
+
+### 1.5 Commit 收斂（僅 ≥2 unfinished）
+
+看哪些 unfinished 目錄在近期 commit 或目前 working tree 出現過路徑（`git log --name-only`／`git diff --name-only`，範圍限 `*/user-stories/**`）：
+
+| 結果 | 動作 |
+|---|---|
+| 恰好 1 個 unfinished 有痕跡 | 選它；說明「依 commit／working tree」 |
+| 0 個或 ≥2 個都有痕跡 | 列出所有 unfinished + 完成度摘要，請使用者指定；停止 |
+
+### 1.6 Fallback（`*/user-stories/*` 完全無合法目錄時）
+
+才掃舊路徑（有 token 時用 `^{token}(-.+)?$`；無 token 時不猜）：
+
+| 路徑 | 用途 |
+|---|---|
+| `docs/specs/{token}/us/` | 任務目錄 |
+| `docs/specs/{token}-user-stories/` | 任務目錄 |
+| `docs/specs/{token}-*.md`（排除 `*-issues.md`） | 純規格、無任務顆粒度 → 建議先 `/user-stories`，不進 unfinished 比較 |
+
+選出後同樣走 §1.4。
 
 ---
 
@@ -150,32 +186,34 @@ Phase 自己的「完成條件」文字（例如「Phase 0 完成條件：...」
 
 ---
 
-## 八、完整範例（SPRD-1336-PHASE2 P0-A → 下一輪 P0-B）
+## 八、Resolve 範例
 
-### 情境
+### 8.1 Feature branch + token（SPRD-1336-PHASE2）
 
-Branch：`feature/SPRD-1336`。
+Branch：`feature/SPRD-1336` → 階 2，token `SPRD-1336`。
 
-### Step 2（定位追蹤目錄）
+- `docs/user-stories/SPRD-1336/` — 已收尾（P0 全勾，僅 P1 可後補未勾）
+- `docs/user-stories/SPRD-1336-PHASE2/` — unfinished
+- §1.4：恰好 1 個 unfinished → 選 `SPRD-1336-PHASE2/`
 
-- 候選 1：`docs/user-stories/SPRD-1336/`（Pilot）— 走一次 2.1 演算法，全部 P0 已勾選，僅少數項目因標註「P1，可後補」未勾，判定為**已收尾**。
-- 候選 2：`docs/user-stories/SPRD-1336-PHASE2/`（Phase2 Epic）— 走一次 2.1 演算法，`P0-B`、`P0-C`、`US001`～`US009` 等大量 P0 項目未勾，判定為**仍有未完成任務**。
-- 結論：恰好 1 個候選仍有未完成任務 → 自動選用 `SPRD-1336-PHASE2/`，並告知使用者「`SPRD-1336/`（Pilot）已收尾，改用進行中的 `SPRD-1336-PHASE2/`」。
+其後 Step 3：Phase 0 順序 P0-A…；Checklist 全 `[ ]`；P0-A 無前置且無驗收說明 → **P0-A 折疊展開行為測試**（純測試 → `/vue-integration-test`）。下一輪同目錄則輪到 P0-B。
 
-### Step 3（找下一個任務）——第一輪（已完成的實際案例）
+### 8.2 main + scan + commit 收斂
 
-- Phase 0 表格順序：1=P0-A、2=P0-B、3=P0-C、4=P1-A、5=P1-B、6=P1-C。
-- 全域 Checklist 起始狀態：全部 `[ ]`。
-- 依賴圖：P0-A、P0-B、P0-C、P1-A、P1-B 均為根節點（無上游）。
-- 走訪：P0-A 未完成、無前置 → 候選。Cross-check 任務檔本身尚無「驗收說明」→ 確認為下一個任務：**P0-A 折疊展開行為測試**。
+Branch：`main` → 階 3，scan 全部 `*/user-stories/*/`。
 
-實際執行：分類為純測試任務（標題含「測試」、不含「提取/重構/拆分/搬移」）→ 偵測為 Vue 2 專案 → 分派 `/vue-integration-test` → 產出 `tests/unit/components/MoreGame/SPRD-1336-render-collapse-expand.unit.test.ts` → `npx jest tests/unit/components/MoreGame --no-coverage`（231 通過，無迴歸）→ 驗收判定 PASS ✅ → 任務檔案「驗收條件」全部 `[x]` 並寫入「驗收說明」→ README 全域 Checklist 的 P0-A 行由 `[ ]` 回填為 `[x]`。
+- `docs/user-stories/career-news/` — unfinished
+- `docs/user-stories/cart-coupon/` — unfinished
+- §1.5：`git log --name-only` 僅 `career-news/` 有痕跡 → 選它；說明依 commit
 
-### Step 3（找下一個任務）——第二輪（下次呼叫本 skill 時預期的結果）
+若兩邊都無痕跡（且 working tree 也無）→ 列出兩者請使用者指定。
 
-- 全域 Checklist：P0-A 已 `[x]`，其餘仍 `[ ]`。
-- 走訪：P0-B（順序 2）未完成、無前置依賴 → 候選。Cross-check 對應任務檔尚無「驗收說明」→ 確認為下一個任務：**P0-B 下注 Payload 整合測試**。
-- 分類：標題含「測試」、不含「提取/重構/拆分/搬移」→ 純測試任務 → 若為 Vue 2 元件整合測試則分派 `/vue-integration-test`；非 Vue 2 則依專案既有測試慣例撰寫。
+### 8.3 Cloud agent branch、無 ticket key
+
+Branch：`cursor/fix-login-5ec2` → 階 2，無 ticket key → slug `fix-login`。
+
+- 若存在 `docs/user-stories/fix-login/` → 進候選池後走 §1.4
+- 若無匹配 → 退回階 3 scan 全部，再 §1.4／§1.5
 
 ---
 
@@ -185,5 +223,4 @@ Branch：`feature/SPRD-1336`。
 
 若本 skill 在其他 ticket 遇到類似「附註明確指向需要人工/PM/PO 簽核或確認」的未完成項目：
 
-- 不要嘗試「自動生出」PM 決策或替使用者猜測答案。
 - 回報：這個任務目前卡在人工決策（引用附註原文），列出待確認事項，然後停止，不進入 SKILL.md Step 4 分派實作。
