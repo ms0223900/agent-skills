@@ -21,7 +21,7 @@ description: Adjust an existing feature — update US, test strategy, implement,
 
 ### Step 1：找出對應 US 目錄
 
-1. 依 [next-task/reference.md](../next-task/reference.md) §一 Resolve ladder 選定追蹤目錄（path → token 匹配 `^{token}(-.+)?$` case-insensitive → token legacy → scan；**不用** `{TICKET}*/` startswith glob）。
+1. 呼叫 `/resolve-tracking-dir` 選定追蹤目錄（或直接讀 [resolve-tracking-dir/reference.md](../resolve-tracking-dir/reference.md) §一 ladder）。
 2. 列出該目錄下所有 US／任務檔案。
 3. 根據使用者描述的調整內容，判斷：
    - 哪些既有 US 需要修改（調整驗收條件或描述）
@@ -126,7 +126,7 @@ description: Adjust an existing feature — update US, test strategy, implement,
 
 ## 注意事項
 
-- US 目錄以 Resolve ladder 為準（見 Step 1／`next-task` reference §一）：`*/user-stories/<slug>/` 優先，token legacy 才用 `docs/specs/...`；同一個專案內選定後沿用，不要混用兩種路徑。
+- US 目錄以 `/resolve-tracking-dir` 為準；同一個專案內選定後沿用，不要混用兩種路徑。
 - 新增 US 存檔：優先寫入 Step 1 選定的追蹤目錄；若該目錄是 legacy `docs/specs/{token}/us/`，檔名 `US-0X-{slug}.md` 序號接續現有最大編號。
 - 測試只確保功能範圍內的行為正確，不做「防禦性全面覆蓋」。
 - 測試先或後由 Step 3 判定，不再無條件先寫測試；但「不寫測試」永遠要附理由，不可以悄悄跳過不提。

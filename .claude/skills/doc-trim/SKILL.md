@@ -21,7 +21,7 @@ US／spec／playbook 這類文件會隨著多輪迭代（`ticket-to-ai-spec` 重
 - 使用者說「這份 spec/US 太囉唆了，幫我精簡」、「這個 playbook 太長了，整理一下」、「這個 epic 的文件都精簡一下，省 token」。
 - `next-task` 收尾時會指向 `/wrap-up`，其下列有本 skill。
 
-**安裝依賴**：本 skill 讀取 [next-task/reference.md](../next-task/reference.md) 的 Resolve ladder；單裝時請一併安裝 `next-task`（見 repo README「安裝群組」）。
+**安裝依賴**：本 skill 透過 `/resolve-tracking-dir` 選定範圍；單裝時請一併安裝 `resolve-tracking-dir`（見 repo README「安裝群組」）。
 
 **何時不用**：
 
@@ -51,7 +51,7 @@ US／spec／playbook 這類文件會隨著多輪迭代（`ticket-to-ai-spec` 重
 ### Step 1：界定範圍
 
 - 使用者明確指定檔案／目錄 → 直接使用。
-- 沒指定 → 套用 [next-task/reference.md](../next-task/reference.md) §一 Resolve ladder 找出對應追蹤目錄（path／token／legacy／scan），一併納入同目錄相關的 `docs/specs/`、`docs/playbooks/` 檔案。
+- 沒指定 → 呼叫 `/resolve-tracking-dir`（或套用其 reference §一）找出追蹤目錄，一併納入同目錄相關的 `docs/specs/`、`docs/playbooks/` 檔案。
 - 範圍仍不明時，用一句話詢問使用者要精簡哪些檔案，不要自己亂猜。
 
 ### Step 2：分類每份文件裡的內容

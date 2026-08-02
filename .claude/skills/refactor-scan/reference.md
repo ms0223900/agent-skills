@@ -16,7 +16,7 @@
 
 ### 1.2 依賴鏈評分
 
-- 直接引用 [next-task/reference.md](../next-task/reference.md) §四的依賴圖判讀規則解析追蹤目錄 README 的「依賴鏈摘要」。
+- 直接引用 [resolve-tracking-dir/reference.md](../resolve-tracking-dir/reference.md) §四的依賴圖判讀規則解析追蹤目錄 README 的「依賴鏈摘要」。
 - 對每個 churn hotspot（或目錄層級 churn 命中的模組），找出負責產出/維護它的任務節點，檢查該節點在依賴圖上是否為**多對一匯聚點**（多個下游任務的箭頭匯聚到它）或**一對多的上游節點**（它是多個下游任務的前置）。
 - 匯聚點／高扇出上游節點命中 → 依賴鏈風險升級：代表愈來愈多功能疊加或依賴在同一段邏輯上，是典型的「該抽象了」訊號。
 - 追蹤目錄沒有「依賴鏈摘要」（無 Checklist 型或純 git 模式）→ 這個維度視為「無法判斷」，不計入命中也不計入未命中，門檻判斷只看範圍/churn 與反模式兩項。
@@ -89,10 +89,10 @@
 
 | 主題 | 本 skill 怎麼用 | 權威來源（不重複維護，改動時只改來源） |
 |---|---|---|
-| Resolve ladder（選定追蹤目錄） | SKILL.md Step 1 直接引用 | [next-task/reference.md](../next-task/reference.md) §一 |
-| 文件形態判讀（README 驅動型 / 無 Checklist 型） | SKILL.md Step 1 直接引用 | next-task/reference.md §二 |
-| 驗收說明 heading 偵測（`^#{2,4}\s*驗收說明`） | SKILL.md Step 2 讀取任務檔案時使用 | next-task/reference.md §五 |
-| 依賴鏈 ASCII 圖判讀規則 | SKILL.md Step 3 / 本檔案 §一.二 直接引用 | next-task/reference.md §四 |
+| Resolve ladder（選定追蹤目錄） | SKILL.md Step 1 呼叫／引用 | [resolve-tracking-dir/reference.md](../resolve-tracking-dir/reference.md) §一 |
+| 文件形態判讀（README 驅動型 / 無 Checklist 型） | SKILL.md Step 1 直接引用 | resolve-tracking-dir/reference.md §二 |
+| 驗收說明 heading 偵測（`^#{2,4}\s*驗收說明`） | SKILL.md Step 2 讀取任務檔案時使用 | resolve-tracking-dir/reference.md §五 |
+| 依賴鏈 ASCII 圖判讀規則 | SKILL.md Step 3 / 本檔案 §一.二 直接引用 | resolve-tracking-dir/reference.md §四 |
 | 反模式表（Feature/Style/Architecture、組件拆分原則） | SKILL.md Step 3 / 本檔案 §一.三 直接引用 | [refactor/reference.md](../refactor/reference.md) 全篇 |
 | Type（Feature/Style/Architecture）× Size（Small/Medium/Large）判斷 | SKILL.md Step 4 / 本檔案 §一.四 沿用同一套詞彙 | [refactor/SKILL.md](../refactor/SKILL.md) Step 1 |
 | 「附上任務全文作為 context」呼叫慣例 | SKILL.md Step 5 呼叫 `/refactor` 時沿用同樣的交接方式 | next-task/SKILL.md Step 3 分派表 |

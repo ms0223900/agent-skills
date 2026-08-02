@@ -52,13 +52,17 @@ Private repo 需本機已具備 GitHub 權限（SSH key 或 HTTPS token）。
 Skills CLI（目前 `skills@1.5.21`）**只複製被選中的 skill 資料夾**，不會自動帶上 `../其他 skill/`。下列家族若單裝會斷掉相對路徑引用，請一次裝齊：
 
 ```bash
-# refactor-scan 家族（引用 next-task / refactor / distill-playbook 的 reference）
+# resolve / next-task 家族（追蹤目錄選定 + 下一任務）
 npx skills add ms0223900/agent-skills \
-  --skill refactor-scan --skill next-task --skill refactor --skill distill-playbook -y
+  --skill resolve-tracking-dir --skill next-task -y
 
-# doc-trim 家族（引用 next-task 的追蹤目錄解析）
+# refactor-scan 家族
 npx skills add ms0223900/agent-skills \
-  --skill doc-trim --skill next-task -y
+  --skill refactor-scan --skill resolve-tracking-dir --skill next-task --skill refactor --skill distill-playbook -y
+
+# doc-trim / adjust 家族（選定追蹤目錄）
+npx skills add ms0223900/agent-skills \
+  --skill doc-trim --skill adjust --skill resolve-tracking-dir -y
 ```
 
 技術棧偵測（`reference.md` / `reference-stack.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust` 等**不需要**額外指令。維護端來源在 `dev/shared/stack-detect.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
@@ -73,7 +77,8 @@ npx skills add ms0223900/agent-skills \
 
 | Skill | 說明 |
 |-------|------|
-| `next-task` | 依 branch / JIRA 找出下一個未完成任務並分派對應 skill；**epic 或 sprint 收尾**時建議交付與 `/wrap-up` |
+| `resolve-tracking-dir` | Resolve 恰好一個 `*/user-stories/<slug>/` 追蹤目錄（path → token → legacy → scan） |
+| `next-task` | 選出下一個未完成任務並分派（一次一個）；閉環見其 `close-loop.md`；收尾時建議交付與 `/wrap-up` |
 | `ticket-to-ai-spec` | 把原始 ticket 轉成 AI 可執行的開發規格 |
 | `user-stories` | 將需求拆成含 AC、測試策略、依賴關係的 User Stories |
 | `new-branch-feature` **（手動）** | 本機依 JIRA 從 master 開 `feature/{TICKET}` 分支 |
@@ -136,7 +141,7 @@ npx skills add ms0223900/agent-skills \
 **建議鏈結**：
 
 1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）→ `/change-report`
-2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` Step 8）→ `/pr-delivery`
+2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` `close-loop.md`）→ `/pr-delivery`
 3. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
 4. 分支：本機 JIRA → `new-branch-feature`；Cloud Agent → `new-branch-cloud-agent`
 
@@ -162,8 +167,12 @@ npx skills add ms0223900/agent-skills \
 ├── wrap-up/SKILL.md
 ├── grill-me/SKILL.md
 ├── grilling/SKILL.md
+├── resolve-tracking-dir/
+│   ├── SKILL.md
+│   └── reference.md
 ├── next-task/
 │   ├── SKILL.md
+│   ├── close-loop.md
 │   └── reference.md
 ├── unit-test/
 │   ├── SKILL.md

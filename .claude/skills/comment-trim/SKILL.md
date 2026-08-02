@@ -19,7 +19,7 @@ disable-model-invocation: true
 **使用時機**：
 
 - 使用者說「這個功能做完了，註解太長/太多了，幫我整理一下」、「回頭檢查一下這次改動的註解」、「comment 精簡一下」。
-- `next-task` 偵測到 epic/feature 收尾時，會建議使用者執行本 skill（見該 skill Step 8）。
+- `next-task` 偵測到 epic/feature 收尾時，會建議使用者執行本 skill（見該 skill `close-loop.md`）。
 
 **何時不用**：
 

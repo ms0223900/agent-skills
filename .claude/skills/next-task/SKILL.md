@@ -1,13 +1,13 @@
 ---
 name: next-task
-description: Resolve 出 */user-stories/* 追蹤目錄中下一個未完成任務並分派實作、測試、驗收（每次只處理一個）。依 ladder：path → token → legacy → scan；多候選時 working tree／最近 5 commit 收斂。使用時機：下一個任務／next task、這個 branch 還有哪些沒做完、sprint／epic 收尾。
+description: 選出下一個未完成任務並分派（每次只處理一個）。使用時機：下一個任務；這個 branch 還有哪些沒做完；sprint／epic 收尾。Reachable by wrap-up flows。
 ---
 
-# 尋找並實作下一個任務（Next Task Workflow）
+# Next Task（一次一個）
 
 ## 目標
 
-在不需要使用者手動指定「要做哪個 US/TASK」的前提下，依序完成：**resolve 追蹤目錄 → 找出依賴順序上的下一個未完成任務 → 依任務性質分派實作 → 測試全過 → 驗收該任務 → 回填追蹤目錄進度 → 停下回報**。本 skill **只處理一個任務**，不會自動連續往下做完整個 Phase 或整個 epic。
+**一次一個任務**：Resolve 目錄 → 找出下一個可動工任務 → 分派 → 閉環 → **停下**。
 
 ---
 
@@ -15,158 +15,57 @@ description: Resolve 出 */user-stories/* 追蹤目錄中下一個未完成任�
 
 ### Step 1：Resolve 追蹤目錄
 
-依 [reference.md](reference.md)「一、Resolve ladder」選定恰好一個追蹤目錄：path → token 匹配（含 case-insensitive）→ token legacy → scan；≥2 unfinished 時依 working tree → `git log -n 5` 收斂。
+呼叫 `/resolve-tracking-dir`（規則見該 skill）。
 
-**完成條件**：已選定恰好一個追蹤目錄，或已停下並向使用者列出選項／原因。
+**完成條件**：已有恰好一個追蹤目錄，或已停下等使用者。
 
-### Step 2：在選定目錄中找出下一個未完成任務
+### Step 2：找出下一個可動工任務
 
-先判斷該目錄屬於哪種文件形態（見 reference.md「文件形態判讀」）：
+依 [resolve-tracking-dir/reference.md](../resolve-tracking-dir/reference.md)「二、文件形態判讀」走訪，取出**依賴已滿足**的第一個未完成任務；候選須用 `^#{2,4}\s*驗收說明` cross-check（已有驗收說明 → 視為完成，繼續找）。
 
-- **README 驅動型**（有「全域驗收 Checklist」與「依賴鏈摘要」，例如 `docs/user-stories/SPRD-1336-PHASE2/README.md`）
-- **無 Checklist 型**（README 只有任務索引與文字描述的依賴關係，狀態只存在各任務檔案本身，例如 `docs/user-stories/SOPS-2721/README.md`）
+| 結果 | 動作 |
+|---|---|
+| 找到可動工任務 | 進入 Step 3 |
+| 全部因依賴卡住 | 回報卡住清單；停止 |
+| 需人工／PM 決策（`[⚠️]`／`[❌]` 且註明 PO／PM 簽核） | 回報待確認事項；停止 |
 
-依對應演算法（reference.md 有完整步驟）逐步找出「順序上最前面、且依賴皆已完成」的第一個未完成任務。**找到候選後，務必打開該任務自己的檔案**，確認它並未已經有 `驗收說明` 區塊（heading 層級與措辭略有不同，用 `^#{2,4}\s*驗收說明` 判斷）。若已經有 → 代表 README 勾選狀態過期，這個任務其實已完成，在回報中註明此落差，並繼續往下找真正的下一個任務。
+**完成條件**：已鎖定一個可動工任務檔，或已停止並回報原因。
 
-若目前所有未完成任務都因依賴未滿足而卡住（沒有任何一個當下可動工）→ **不要硬做**，明確回報「目前沒有可動工的任務，被下列依賴卡住：...」，並停止（不要選一個依賴未滿足的任務動手實作）。
+### Step 3：分類並分派
 
-若判定的下一個任務被標記為需要人工/PM 決策（例如 `[⚠️]`、`[❌]` 並附註「PO／Release 簽核為準」「需與 PM 再確認」等字樣，如 `docs/user-stories/SPRD-660/README.md`）→ 視為不可由本 skill 自動推進，回報該任務目前卡在人工決策、列出待確認事項，然後停止，不要代替 PO/PM 做決定或動手實作。
+先讀任務「測試策略／輸出格式」。**文件產出型**（聲明不改程式、輸出即文件）→ 略過實作分派，直接載入 [close-loop.md](close-loop.md) 走 C2。
 
-### Step 3：分類任務並分派實作
+其餘依 **dispatch ladder**（由上而下，命中即分派；細節見 [reference.md](reference.md)）：
 
-讀取任務標題與內容，依關鍵字分類：
-
-| 判斷依據 | 分類 | 分派 |
+| 優先 | 判準 | 分派 |
 |---|---|---|
-| 含「測試」，且不含「提取」/「重構」/「拆分」/「搬移」 | 純測試任務 | 先偵測技術棧與測試層級：純函式/utils/composable/hook（不涉及渲染）→ `/unit-test`；**Vue 2 元件渲染** → `/vue-integration-test`；**React/Next 元件渲染** → `/react-integration-test`；跨頁面瀏覽器流程/E2E → `/e2e-test`。**不要**呼叫 `/feature` 或 `/refactor` |
-| 含「提取」/「重構」/「拆分」/「搬移」（不論是否也提到「測試」） | 重構任務 | 呼叫 `/refactor`，附上任務全文作為 context |
-| 含「修正」/「修復」/「fix」/「bug」等修錯關鍵字，且已有明確錯誤描述（ESLint/type/test/build 報錯或既有錯誤行為） | 修錯任務 | 呼叫 `/fix`，附上任務全文與已知錯誤訊息作為 context |
-| 任務檔案本身聲明「不修改任何程式碼」，且測試策略為 Exploratory／不適用，「輸出格式」內容就是文件本身要寫的文字（研究結論、盤點報告、評估建議等） | 文件產出型任務 | **不要**分派給 `/feature`／`/refactor`／`/fix`／任何測試 skill——沒有程式碼可以實作，硬塞會是錯誤動作。跳過 Step 3 的分派與 Step 4 的測試執行，直接進入 Step 5，對該任務檔案本身呼叫 `/us-acceptance-check`，驗證內容是否真實反映現況（而不是「功能是否已上線」） |
-| 其餘（新行為或行為變更） | 功能任務 | 呼叫 `/feature`，附上任務全文作為 context |
+| 1 | 修錯：既有錯誤／失敗要修好 | `/fix` |
+| 2 | 重構：提取／重構／拆分／搬移 | `/refactor` |
+| 3 | 純測試：新增測試覆蓋（非修既有紅燈） | `/unit-test`／`/vue-integration-test`／`/react-integration-test`／`/e2e-test` |
+| 4 | 其餘新行為 | `/feature` |
 
-**分類判斷的優先順序（同時符合多列時，例如標題是「修正登入功能的測試」——同時含「測試」也含「修正」）**：先問「這個任務的產出是『新增一支之前不存在的測試』，還是『修好一個目前壞掉/不通過的既有測試或功能』？」
+分派時附上任務全文（含測試策略）。Test-First 測試準備 → 告知「預期紅燈即可」；Test-First 實作 → 告知「對既有紅燈測試實作至綠」。
 
-- 描述的是既有測試/功能出現錯誤、需要診斷並修正（有具體錯誤現象、錯誤訊息，或「不通過」「壞掉」等字眼）→ 判定為**修錯任務**，呼叫 `/fix`，即使標題也含「測試」二字。
-- 描述的是需要新增/撰寫測試以覆蓋原本沒有測試的邏輯（沒有既有錯誤，純粹缺測試）→ 判定為**純測試任務**，依技術棧分派對應測試 skill。
-- 仍無法判斷時，不要自行猜測，直接詢問使用者。
+分派 skill **返回後**，載入 [close-loop.md](close-loop.md) 做完驗證／驗收／回填／回報，然後**停住**（再次呼叫本 skill 才做下一件）。
 
-**在套用上述分類前，先檢查是否為「文件產出型任務」**：標題含糊、不含測試/重構/修錯關鍵字的任務，預設會落入「功能任務」分派給 `/feature`，但若任務檔案本身已聲明「不修改任何程式碼」且輸出就是文件內容本身（例如 `/ticket-to-ai-spec` 針對研究性質 ticket 產出的評估/建議任務），**不能**因為關鍵字比對不到前三類就預設歸為功能任務——那樣會讓 `/feature` 去找不存在的程式碼實作。務必先確認任務的「測試策略」與「輸出格式」是否指向純文件產出，是的話直接套用上表的「文件產出型任務」列。
-
-分派時附上任務檔案的「作為／我想要／以便」、輸入格式、輸出格式、驗收條件、**測試策略（含完成條件）**、依賴關係全文，等同直接把 ticket 交給協作者——測試策略欄位不能被漏掉，它是下面「尊重測試策略欄位」判斷的依據。
-
-**尊重任務檔案的「測試策略」欄位**（`/user-stories` 產出時會標註 Test-First / Test-After / Exploratory，見該 skill 的「測試策略判斷」）：
-
-- 若本次要分派的正是 Test-First 拆分中的**測試任務本身**（產出是那支預期紅燈的測試，不是實作）→ 分派給 `/unit-test`／`/vue-integration-test`／`/react-integration-test`／`/e2e-test` 時，必須明確告知：「此任務是 TDD 測試準備任務：寫完測試後只需確認它因對應功能尚未實作而預期紅燈（且紅燈原因不是測試本身寫錯/環境設定錯），不要呼叫 `/fix`、不要嘗試把功能實作出來」。這個提醒不能省略——測試撰寫技能自己的預設流程是「跑到全過，失敗就找 `/fix`」，沒有這句明確告知就會被順手拿去實作掉，讓後面依賴這支測試的實作任務失去意義。
-- 若本次要分派的是**實作任務**，且其依賴的**測試任務**已完成（意即已有對應的失敗測試存在）→ 分派給 `/feature`／`/refactor`／`/fix` 時，明確告知：「此任務採 TDD：對應測試已存在於 `{測試檔路徑}` 且目前應為紅燈，請實作至該測試轉綠；不要為了通過而修改測試期望值，除非測試本身寫錯，需說明理由（比照 `/fix` 對 Test 類型錯誤的判準）」。
-- 若欄位為 Test-After → 依原本順序，先分派實作，待 Step 4 跑測試時再視情況呼叫對應測試 skill 補測試。
-- 若欄位為 Exploratory 且任務內已說明「不寫測試」的理由 → 分派實作時原樣附上這段理由，不要自己另外決定要不要補測試。
-- 若任務檔案完全沒有「測試策略」欄位（例如較舊的任務文件）→ 視為未標註，依原本各 skill 的預設行為進行，不需要回頭幫舊任務補欄位。
-
-若任務屬於 E2E 性質：呼叫 `/e2e-test` 撰寫（依既有 Page Object Model，如 `tests/e2e/support/pages/*.page.ts`）。只有在已確認開發伺服器、baseURL、測試帳號/資料皆就緒時，才在 Step 4 執行 `npx playwright test`；否則明確回報未執行的前置條件，不可假稱已驗證。
-
-> 注意分工邊界：`/feature`／`/refactor`／`/fix` 自己做完後也會在任務檔案內打勾其驗收條件細項（AC 層級），這與本 skill 在 Step 6 對「追蹤目錄 README 全域 Checklist」的回填是不同層級的紀錄；Step 5 會呼叫 `/us-acceptance-check` 對任務檔案的 AC 重新、權威性地判定一次，兩者不會互相牴觸，不需要重複手動勾選。
-
-### Step 4：執行對應驗證
-
-先判斷是否為「Test-First 的測試準備任務」——**判斷依據是任務檔案本身有沒有明確寫出**：「測試策略：Test-First」且完成條件明載為「預期紅燈」/「因功能尚未實作而預期失敗」這類措辭（`/user-stories` 現行慣例的產出）。**不要用「這支測試現在跑起來是紅的」反推它是刻意的 TDD 準備任務**——較舊、或非經 `/user-stories` 產出的任務檔案沒有這個欄位時，紅燈更可能單純代表「這支測試還沒讓它過」，應視為一般測試任務照 Step 4 一般流程處理（失敗才呼叫 `/fix`），不要自行腦補成 TDD 情境而略過修正。
-
-- 是 → 單跑新增的聚焦測試，確認它因**功能尚未實作**而預期失敗（red），且不是設定、編譯或測試碼錯誤。此時不要呼叫 `/fix`、不要要求全 suite 轉綠；記錄測試檔路徑與預期失敗訊息，進入 Step 5 的例外流程。
-- 否 → 依下列 runner 執行受影響測試至全過。
-
-先偵測專案測試 runner（`package.json` scripts 或設定檔）：
-
-| Runner | 常見指令 |
-|--------|----------|
-| Jest | `npx jest {受影響的測試檔路徑} --no-coverage` |
-| Vitest | `npx vitest run {受影響的測試檔路徑}` |
-| Playwright | `npx playwright test {測試檔路徑}`（僅當任務明確要求 E2E 且 Step 3 的環境前置條件已確認） |
-
-一般任務若失敗，呼叫 `/fix` 診斷並修正（程式碼或測試）直到全部通過；不要自己在本 skill 內臨場診斷、也不要為了通過而降低覆蓋率或刪減斷言。`/fix` 若判斷根因不明確或需要外部佐證（API response、log、截圖），會誠實回報並暫停等待使用者提供資訊——此時本 skill 也應停止並如實轉達，不要代替使用者猜測或略過。
-
-### Step 5：驗收該任務
-
-一般任務呼叫 `/us-acceptance-check`，目標檔案為本次任務自己的檔案。讓它逐條核對驗收條件、更新該檔案的 checklist 標記，並寫入「驗收說明」區塊。**不要自己手動勾選或編寫驗收說明**，一律交給 `/us-acceptance-check` 執行，避免邏輯分裂。
-
-若是 Step 4 的 Test-First 測試準備任務，則不呼叫 `/us-acceptance-check`（它只驗收已實作的功能 AC）。改在任務檔寫入簡短的「驗收說明」，標記為「PREPARED：預期紅燈測試已建立」，附上測試檔路徑及預期失敗原因。
-
-**注意區分兩種 AC，不要一律留白**：測試任務自己的驗收條件（`/user-stories` 產出時會明載為「測試已建立且確認因功能尚未實作而預期紅燈」這類條件）**應該**勾選為 `[x]`——這正是這個任務被要求做到的事；**不得**勾選的只有那些明顯屬於「功能本身」的 AC（例如不小心混進同一份任務檔、描述的是實作完成後才會成立的行為）。無法區分兩者時，在驗收說明中列出待確認的 AC 項目，不要圖方便就整批勾或整批不勾。
-
-這個區分很重要：無 Checklist 型追蹤目錄（見 `reference.md` §2.2）判斷任務是否完成，依據就是「這個任務自己的驗收條件是否全部 `[x]`」。若測試任務自己的 AC 因為怕跟「功能完成」搞混而一直留白，`/next-task` 之後每次都會重新選到同一個已經 PREPARED 過的測試任務，永遠推進不到依賴它的實作任務——正確勾選測試任務自己的 AC，演算法才能判定「測試準備」這一步已完成，繼續往下找到真正的下一個任務。
-
-### Step 5.5：重構時機掃描
-
-若 Step 3 的分類是「功能任務」或「修錯任務」（即這次分派的是 `/feature` 或 `/fix`，觸及了產品邏輯）→ 呼叫 `/refactor-scan`，讓它判斷這次改動（及前幾次相關改動）是否已到重構時機。`/refactor-scan` 自己會在判定需要重構時徵求使用者確認，才會分派 `/refactor`——本 skill 不需要重複詢問，只需在 Step 7 的回報中一併帶到 `/refactor-scan` 的結論與使用者的決定。
-
-若 Step 3 的分類是「重構任務」（本身已經在做重構）或「純測試任務」（未觸及產品邏輯）→ 略過本步驟。
-
-### Step 6：回填追蹤目錄 README
-
-`/us-acceptance-check` 完成後，取得它的整體結論（PASS ✅ / PARTIAL ⚠️ / FAIL ❌）。若是 Test-First 測試準備任務，則使用 Step 5 記錄的 PREPARED 結論：
-
-- 若該追蹤目錄的 README 有「全域驗收 Checklist」→ 依下表回填該任務對應的那一行：
-
-  | `/us-acceptance-check` 結論 | README 行標記 |
-  |---|---|
-  | PASS ✅ | `[x]` |
-  | PARTIAL ⚠️ | `[⚠️]`，附簡短說明或指向該任務「驗收說明」 |
-  | FAIL ❌ | 維持 `[ ]`，**不要**回報為完成 |
-  | PREPARED | `[x]`，附註「預期紅燈測試已建立；待相依實作任務轉綠」 |
-
-- 若該目錄屬於「無 Checklist 型」（狀態只存在任務檔案本身，例如 SOPS-2721）→ 跳過本步驟。
-
-### Step 7：完成回報
-
-簡短總結：選了哪個追蹤目錄與原因、做了哪個任務、分派到哪個 skill、測試結果、`/us-acceptance-check` 結論、Step 5.5 是否呼叫了 `/refactor-scan`（及其判定的風險等級、是否進一步分派 `/refactor`）、README 是否更新。
-
-#### 交付觸發（epic 收尾 **或** sprint 收尾）
-
-在回報末尾，若符合下列**任一**情況，進入「交付建議」流程（先於知識沉澱建議）：
-
-| 觸發 | 如何判定 |
-|------|----------|
-| **Epic／feature 收尾** | 依 reference.md 收尾判斷：README 驅動型且回填後所有 P0（必要）任務皆已勾選（P1/P2 依註記可延後不計）；或無 Checklist 型且該追蹤目錄任務全數完成 |
-| **Sprint 收尾** | 使用者明確表示「sprint 收尾」「這個 sprint 做完了」「sprint 結束要交付」等；或本回合一開始就是以 sprint 收尾為目標呼叫本 skill（即使單一 epic 尚未全勾，也以「本 sprint 要交付的變更範圍」為準） |
-
-交付建議（**本機互動預設只建議、不自動執行**）：
-
-1. 若工作區或 branch 上仍有未交付的程式變更 → 建議依序：`/change-report`（分層摘要）→ `/pr-delivery`（draft PR；禁止直推 main）。可選再以 `for-review` 跑 `/pr-acceptance-checklist` 貼成 PR comment。
-2. Background／Cloud Agent：在觸發成立且變更已驗證時，**應執行** `/change-report` + `/pr-delivery`（需要開 `cursor/...` 分支時先用 `/new-branch-cloud-agent`），再繼續下面的知識沉澱建議。
-3. Sprint 收尾但跨多個 epic／分支 → 不要假設單一 PR 能裝下一切：列出涉及的分支／追蹤目錄，請使用者指定要交付哪幾條，或逐條建議 `/pr-delivery`；可搭配 `/weekly-branch-report` 做區間盤點。
-
-#### 知識沉澱建議（交付建議之後）
-
-- **Epic／feature 收尾**時：見 `/wrap-up`，建議使用者依需求另外手動執行。**不要**自己去動 playbook／CLAUDE.md／其他 skill 檔案，也不要自己動手精簡註解或文件措辭——那些都是各自 skill 的職責。
-- **僅 sprint 收尾、個別 epic 未收尾**：以交付建議為主；`/wrap-up` 底下的知識沉澱類 skill 等該 epic 真正收尾再建議，避免半成品經驗被寫進 playbook。
-
-其他：
-
-- 提示「下一個任務可能會是 XXX」，但**不要自動繼續實作**；需要使用者再次呼叫本 skill 才會處理下一個任務。
-- **本機互動**：**不要**自動 `git add`／`git commit`（與上方交付建議一致；實際 commit 由使用者確認後的 `/pr-delivery` 或人工處理）。
-- **Background／Cloud Agent**：不受「不要自動 commit」限制——在交付觸發成立時依 `/pr-delivery` 執行 commit／push／開 PR。
+**完成條件**：已分派（或文件型已進 close-loop），且 close-loop 已結束並停下。
 
 ---
 
-## 邊界情況
+## 何時改用別的 skill
 
-- **完全找不到追蹤文件／全收尾**：見 Step 1（reference §1.4）；建議 `/ticket-to-ai-spec` 和/或 `/user-stories`，停止。
-- **多個 unfinished 且 commit 無法唯一收斂**：見 Step 1（reference §1.5）；列出候選讓使用者選。
-- **README 打勾但任務檔案本身沒有「驗收說明」，或反過來**：以任務檔案自己的實際狀態為準（見 Step 2 的 cross-check），並在回報中指出 README 與檔案不同步的落差。
-- **下一個候選任務的依賴未滿足**：一律跳過、continue 往下找；若全部卡住就照實回報並停止。
-- **任務被標成需要人工/PM 決策**（如 SPRD-660 的「PO／Release 簽核為準」）：視為不可自動推進，回報並停止。
-- **僅有純規格檔、無任務拆解**（token legacy §1.6）：建議先 `/user-stories`。
-
----
-
-## 何時不要使用這個 skill
-
-- 已經明確知道要驗收哪一份 US/TASK 檔案，且不需要「找出下一個」也不需要動手實作 → 直接用 `/us-acceptance-check`。
-- 使用者已經明確描述好要調整的內容（不需要先幫他找任務）→ 用 `/adjust`（補充調整既有功能的固定流程）或直接 `/feature`／`/refactor`。
-- 想整併一整個 epic 收尾後的知識到 Playbook/Skill/CLAUDE.md → 用 `/distill-playbook`（見 `/wrap-up`）；本 skill 只在偵測到疑似收尾時「建議」使用者另外執行，不會自己動手整併。
-- 只要開 PR／產出變更摘要、不需要找下一個任務 → 用 `/change-report`／`/pr-delivery`。
-- 需求文件都還沒拆成 User Story → 先用 `/user-stories`，本 skill 假設任務拆解已經存在。
+| 情境 | 改用 |
+|---|---|
+| 只要選定追蹤目錄 | `/resolve-tracking-dir` |
+| 已知 US 檔、只驗收 | `/us-acceptance-check` |
+| 已知道要改什麼 | `/adjust`／`/feature`／`/refactor` |
+| 只要開 PR／變更摘要 | `/change-report`／`/pr-delivery` |
+| 尚未拆 User Story | `/user-stories` |
 
 ---
 
 ## Additional Resources
 
-- Resolve ladder、文件形態、checkbox 正規化、依賴圖、範例：見 [reference.md](reference.md)
+- 分類歧義、E2E、人工決策例：見 [reference.md](reference.md)
+- 分派後閉環：見 [close-loop.md](close-loop.md)（Step 3 返回後才載入）
+- Resolve／文件形態：見 `/resolve-tracking-dir`
