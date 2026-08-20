@@ -125,6 +125,7 @@ npx skills add ms0223900/agent-skills \
 | `quick-debug` | 快速定位 bug / 異常行為 |
 | `find-component-render-path` | 分析 UI 元素如何被渲染、如何觸發 |
 | `independent-review` | 獨立 sub-agent 批判式審查（只報告、不改碼） |
+| `security-audit` **（手動）** | 公開上線／公開宣傳前的全庫漏洞盤點（只報告、不改碼；源自 [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)，已 vendored） |
 | `pr-acceptance-checklist` | PR／MR 驗收清單（`for-review` 完整／`for-pr-body` 精簡） |
 | `us-acceptance-check` | 檢查 US 驗收條件是否已在程式碼中實現 |
 | `merge-conflict-check` **（手動）** | dry-run 評估目前分支合進主幹會不會衝突 |
@@ -144,12 +145,13 @@ npx skills add ms0223900/agent-skills \
 2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` `close-loop.md`）→ `/pr-delivery`
 3. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
 4. 分支：本機 JIRA → `new-branch-feature`；Cloud Agent → `new-branch-cloud-agent`
+5. **公開上線／對外宣傳前**（手動，偶爾）→ `/security-audit`；不要每個 PR 或 epic 自動跑
 
 ### 收尾與知識沉澱
 
 | Skill | 說明 |
 |-------|------|
-| `wrap-up` **（手動）** | Router：列出下方收尾類 skill 與何時用，本身不執行 |
+| `wrap-up` **（手動）** | Router：列出下方收尾類 skill 與何時用（含上線前 `/security-audit`），本身不執行 |
 | `comment-trim` **（手動）** | 精簡功能開發期間累積的贅述註解 |
 | `doc-trim` **（手動）** | 精簡 US / spec / playbook 敘述文字（保留結構） |
 | `distill-playbook` **（手動）** | 把 epic/feature 驗收經驗蒸餾進 Playbook / Skill |
@@ -184,11 +186,11 @@ scripts/
 └── sync-shared-refs.sh       # 把來源鋪進各 skill 的 reference*.md
 ```
 
-每個 skill 是一個目錄，至少包含 `SKILL.md`（YAML frontmatter + 指示）。Skills CLI 會自動發現 `.claude/skills/`。`grill-me`／`grilling` 以 vendored copy 形式放在 `.claude/skills/`，勿在 repo 根目錄為它們建立 `skills-lock.json` 條目，否則 Skills CLI 會把它們從可安裝清單排除。`writing-great-skills` 則經 `skills-lock.json` 由上游安裝。
+每個 skill 是一個目錄，至少包含 `SKILL.md`（YAML frontmatter + 指示）。Skills CLI 會自動發現 `.claude/skills/`。`grill-me`／`grilling`／`security-audit` 以 vendored copy 形式放在 `.claude/skills/`，勿在 repo 根目錄為它們建立 `skills-lock.json` 條目，否則 Skills CLI 會把它們從可安裝清單排除。`writing-great-skills` 則經 `skills-lock.json` 由上游安裝。
 
 ## 建議用法
 
 1. 在目標專案安裝需要的 skills（或全部；跨 skill 家族見上方「安裝群組」）。
 2. 用自然語言觸發 model-invoked skills，例如「下一個任務」「幫我寫這個 util 的單元測試」「驗收 US-XXX」。
-3. 收尾類請手動呼叫 `/wrap-up` 再選子 skill。
+3. 收尾類請手動呼叫 `/wrap-up` 再選子 skill。公開上線或對外宣傳前的漏洞盤點請手動呼叫 `/security-audit`（不要每個 PR／epic 自動跑）。
 4. 需要最新版時在該專案執行 `npx skills update`。

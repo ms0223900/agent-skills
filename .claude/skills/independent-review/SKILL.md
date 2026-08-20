@@ -26,7 +26,8 @@ description: 對指定標的（plan、未 commit 變更、commit range、一組�
 | 只是核對 US 驗收條件是否已在程式碼中實現 | `us-acceptance-check`（機械式核對，非批判式挑錯） |
 | 只是核對 PR 有沒有做到規格內的事、有沒有動到不該動的地方 | `pr-acceptance-checklist` |
 | 一般程式碼 bug／簡化／效能審查 | 內建的 `code-review` |
-| 安全性審查 | 內建的 `security-review` |
+| 針對本次變更的安全性審查 | 內建的 `security-review` |
+| 公開上線／公開宣傳前的全庫漏洞盤點 | `/security-audit`（手動；本 skill 不可代呼） |
 
 ---
 
