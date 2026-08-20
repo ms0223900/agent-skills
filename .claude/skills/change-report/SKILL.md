@@ -34,6 +34,7 @@ description: 以 git diff 產出適合手機審閱的分層變更報告，不修
 - 還在實作中、diff 尚未穩定 → 等收尾再跑。
 - 只要機械式核對「有沒有做到 AC、有沒有動到不該動的」→ 用 `/pr-acceptance-checklist` 或 `/us-acceptance-check`。
 - 要批判式挑錯 → 用 `/independent-review`。
+- 公開上線／宣傳前要做全庫漏洞盤點 → 用 `/security-audit`（手動）。
 - 要直接開 PR → 先跑本 skill，再呼叫 `/pr-delivery`。
 
 ---
