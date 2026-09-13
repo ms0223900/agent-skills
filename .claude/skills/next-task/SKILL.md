@@ -60,6 +60,7 @@ description: 選出下一個未完成任務並分派（每次只處理一個）�
 | 已知 US 檔、只驗收 | `/us-acceptance-check` |
 | 已知道要改什麼 | `/adjust`／`/feature`／`/refactor` |
 | 只要開 PR／變更摘要 | `/change-report`／`/pr-delivery` |
+| 整包／同一 PR | `/next-package` |
 | 尚未拆 User Story | `/user-stories` |
 
 ---

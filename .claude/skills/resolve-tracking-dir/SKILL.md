@@ -1,6 +1,6 @@
 ---
 name: resolve-tracking-dir
-description: Resolve 恰好一個 */user-stories/<slug>/ 追蹤目錄（path → token → legacy → scan；多候選時 working tree → git log -n 5）。Reachable by /next-task、/adjust、/doc-trim、/refactor-scan。使用時機：只要選定追蹤目錄、不必找下一任務。
+description: Resolve 恰好一個 */user-stories/<slug>/ 追蹤目錄（path → token → legacy → scan；多候選時 working tree → git log -n 5）。Reachable by /next-task、/next-package、/adjust、/doc-trim、/refactor-scan。使用時機：只要選定追蹤目錄、不必找下一任務。
 ---
 
 # Resolve 追蹤目錄

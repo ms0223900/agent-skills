@@ -1,6 +1,6 @@
 ---
 name: pr-delivery
-description: 將已完成的變更交付為 GitHub draft Pull Request，commit、push 並套用 PR 模板，禁止直推 main／master。使用時機：使用者說「幫我開 PR」「交付這次變更」「建立 pull request」，或 Cloud Agent 收尾。Reachable by /feature、/fix、/adjust、/refactor、/next-task（cloud 收尾）。
+description: 將已完成的變更交付為 GitHub draft Pull Request，commit、push 並套用 PR 模板，禁止直推 main／master。使用時機：使用者說「幫我開 PR」「交付這次變更」「建立 pull request」，或 Cloud Agent 收尾。Reachable by /feature、/fix、/adjust、/refactor、/next-task（cloud 收尾）、/next-package（scaffold 與包尾）。
 ---
 
 # PR 交付（PR Delivery）
@@ -28,7 +28,7 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 **何時不用**：
 
 - 本機互動開發、使用者未要求開 PR，且非 Background Agent → **不要**自動 commit／push／開 PR（與 `/next-task`「不自動 commit」一致）；可只跑 `/change-report` 把摘要給使用者自行貼。
-- 變更尚未驗證（測試紅燈、驗收 FAIL）→ 先修到可交付，再開 PR。
+- 變更尚未驗證（測試紅燈、驗收 FAIL）→ 先修到可交付，再開 PR。**例外**：呼叫端標 **scaffold**（見 Step 1）。
 - 目前已在 `main`／`master` 且有未推送 commit → **先開分支**再交付：Cloud／Background → 呼叫 `/new-branch-cloud-agent`；本機有 JIRA → **暫停並請使用者手動執行** `/new-branch-feature`（該 skill 為 user-invoked，本 skill 無法代為觸發），再開本 skill。不要往主幹推。
 
 ---
@@ -43,6 +43,9 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 | `/next-task` 單任務循環中途 | ❌ 不執行（等 epic／sprint 收尾、使用者明確要求，或 Background Agent 外層收尾） |
 | `/next-task` 判定 epic 或 sprint 收尾，且為 Background／Cloud Agent | ✅ 執行 |
 | `/next-task` 判定 epic 或 sprint 收尾，且為本機互動 | ❌ 只建議；等使用者確認後再跑 |
+| `/next-package` scaffold | ✅ 跳過 `/change-report`；更新或建立同一張 draft |
+| `/next-package` 迴圈進度或包尾 | ✅ 更新同一張 draft（包尾才跑 `/change-report`） |
+| `/next-task` close-loop 在 `/next-package` 編排中自行觸發 | ❌ 交付由 `/next-package` 呼叫本 skill |
 
 ---
 
@@ -60,6 +63,10 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 
 ### Step 1：產出變更報告
 
+**scaffold**（呼叫端標明）：跳過 `/change-report`。標題與 body 用呼叫端提供的整包計畫（權威：`/next-package` reference「三、scaffold」）。相對 base 無 commit 時，接受呼叫端已做的空 commit。
+
+其餘情況：
+
 - 若對話中**剛跑過** `/change-report` 且 diff 範圍未再變更 → 重用該輸出。
 - 否則**先完整執行** `/change-report`，取得固定格式 Markdown。
 - 報告中的「30 秒摘要／目的」將同時用於推導 PR 標題。
@@ -71,7 +78,7 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
    - `git add` 只加入本次相關檔案（勿把無關的 local 雜訊加進去）。
    - Commit message：簡潔、說明意圖；有 ticket 時帶上（例如 `feat(SPRD-1234): 購物車優惠券折抵`）。
    - **不要**把 secrets、`.env`、大型產物加進 commit。
-3. 本機互動且使用者未要求 commit → 停止在 Step 1，只交報告，詢問是否繼續 commit／開 PR。
+3. 本機互動且使用者未要求 commit → 停止在 Step 1，只交報告，詢問是否繼續 commit／開 PR。**例外**：`/next-package` 已確認整包（含 scaffold）視為已要求開 draft。
 
 ### Step 3：Push
 
@@ -157,7 +164,7 @@ git push -u origin HEAD
 ## Checklist
 
 - [ ] 確認不在主幹分支上 push；必要時已另開 feature／cursor 分支
-- [ ] 已有最新 `/change-report`（或本回合已執行）
+- [ ] 已有最新 `/change-report`（或本回合已執行；`/next-package` scaffold 除外）
 - [ ] commit 僅含相關檔案；message 清楚
 - [ ] 已 push 到正確遠端分支
 - [ ] 已建立或更新 draft PR（或誠實回報僅準備了 body）
@@ -170,12 +177,13 @@ git push -u origin HEAD
 
 | Skill | 關係 |
 |-------|------|
-| `/change-report` | **必要前置**：本 skill 消費其輸出當 PR body |
+| `/change-report` | **必要前置**（scaffold 除外）：本 skill 消費其輸出當 PR body |
 | `/feature`／`/fix`／`/adjust`／`/refactor` | 實作收尾後，在觸發條件符合時呼叫本 skill |
 | `/pr-acceptance-checklist` | 開 PR 後可選 `for-review` 貼 comment；`for-pr-body` 由 `/change-report` 消費 |
 | `/new-branch-feature` | 本機開 `feature/{TICKET}`（**user-invoked**：本 skill 只能請使用者手動執行，不可代呼） |
 | `/new-branch-cloud-agent` | Cloud／Background 開 `cursor/<name>-<suffix>`；在主幹上被攔截時優先用 |
 | `/next-task` | Epic 或 sprint 收尾時建議（或於 Cloud 執行）本 skill；中途單任務循環不自動開 PR |
+| `/next-package` | 確認後、迴圈前 scaffold 開同一張 draft；迴圈中／包尾只更新那張 |
 
 ---
 
@@ -192,3 +200,7 @@ git push -u origin HEAD
 **本機使用者只說「功能好了」**
 
 → 不呼叫本 skill；跑完實作 skill 後建議「若要交付可呼叫 `/pr-delivery`」，並可先給 `/change-report` 預覽。
+
+**`/next-package` scaffold**
+
+→ 跳過 change-report → push → 建或更新同一張 draft。包尾再跑 change-report 更新那張。

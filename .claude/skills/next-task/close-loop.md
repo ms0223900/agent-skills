@@ -51,3 +51,5 @@ Runner：Jest `npx jest {path} --no-coverage`；Vitest `npx vitest run {path}`�
 | Sprint 收尾 | 使用者明示 sprint 收尾，或本回合以此為目標 |
 
 本機：建議 `/change-report` → `/pr-delivery`（不自動 commit）。Cloud：觸發成立且已驗證 → 執行二者（必要時先 `/new-branch-cloud-agent`）。Epic 收尾可另建議 `/wrap-up`（不代為執行）。
+
+本回合由 `/next-package` 編排（package 已鎖定且 scaffold 已開）→ 交付交給編排層；C5 仍停住。

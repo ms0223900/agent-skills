@@ -56,6 +56,11 @@ Skills CLI（目前 `skills@1.5.21`）**只複製被選中的 skill 資料夾**�
 npx skills add ms0223900/agent-skills \
   --skill resolve-tracking-dir --skill next-task -y
 
+# next-package 家族（整包同一 PR；會相對路徑讀上述 skill）
+npx skills add ms0223900/agent-skills \
+  --skill next-package --skill next-task --skill resolve-tracking-dir \
+  --skill new-branch-cloud-agent --skill pr-delivery --skill change-report -y
+
 # refactor-scan 家族
 npx skills add ms0223900/agent-skills \
   --skill refactor-scan --skill resolve-tracking-dir --skill next-task --skill refactor --skill distill-playbook -y
@@ -79,6 +84,7 @@ npx skills add ms0223900/agent-skills \
 |-------|------|
 | `resolve-tracking-dir` | Resolve 恰好一個 `*/user-stories/<slug>/` 追蹤目錄（path → token → legacy → scan） |
 | `next-task` | 選出下一個未完成任務並分派（一次一個）；閉環見其 `close-loop.md`；收尾時建議交付與 `/wrap-up` |
+| `next-package` | 切相關未完成 US 為一包，先開同一張 draft PR，再依序 loop `/next-task` |
 | `ticket-to-ai-spec` | 把原始 ticket 轉成 AI 可執行的開發規格 |
 | `user-stories` | 將需求拆成含 AC、測試策略、依賴關係的 User Stories |
 | `new-branch-feature` **（手動）** | 本機依 JIRA 從 master 開 `feature/{TICKET}` 分支 |
@@ -143,9 +149,10 @@ npx skills add ms0223900/agent-skills \
 
 1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）→ `/change-report`
 2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` `close-loop.md`）→ `/pr-delivery`
-3. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
-4. 分支：本機 JIRA → `new-branch-feature`；Cloud Agent → `new-branch-cloud-agent`
-5. **公開上線／對外宣傳前**（手動，偶爾）→ `/security-audit`；不要每個 PR 或 epic 自動跑
+3. 整包／同一 PR → `/next-package`（確認後先 scaffold draft，再 loop `/next-task`；包尾再更新同一張 PR）
+4. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
+5. 分支：本機 JIRA → `new-branch-feature`；Cloud Agent → `new-branch-cloud-agent`
+6. **公開上線／對外宣傳前**（手動，偶爾）→ `/security-audit`；不要每個 PR 或 epic 自動跑
 
 ### 收尾與知識沉澱
 
@@ -176,6 +183,9 @@ npx skills add ms0223900/agent-skills \
 │   ├── SKILL.md
 │   ├── close-loop.md
 │   └── reference.md
+├── next-package/
+│   ├── SKILL.md
+│   └── reference.md
 ├── unit-test/
 │   ├── SKILL.md
 │   └── reference-*.md
@@ -191,6 +201,6 @@ scripts/
 ## 建議用法
 
 1. 在目標專案安裝需要的 skills（或全部；跨 skill 家族見上方「安裝群組」）。
-2. 用自然語言觸發 model-invoked skills，例如「下一個任務」「幫我寫這個 util 的單元測試」「驗收 US-XXX」。
+2. 用自然語言觸發 model-invoked skills，例如「下一個任務」「整包同一 PR」「幫我寫這個 util 的單元測試」「驗收 US-XXX」。
 3. 收尾類請手動呼叫 `/wrap-up` 再選子 skill。公開上線或對外宣傳前的漏洞盤點請手動呼叫 `/security-audit`（不要每個 PR／epic 自動跑）。
 4. 需要最新版時在該專案執行 `npx skills update`。
