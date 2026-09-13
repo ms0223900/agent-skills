@@ -28,7 +28,7 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 **何時不用**：
 
 - 本機互動開發、使用者未要求開 PR，且非 Background Agent → **不要**自動 commit／push／開 PR（與 `/next-task`「不自動 commit」一致）；可只跑 `/change-report` 把摘要給使用者自行貼。
-- 變更尚未驗證（測試紅燈、驗收 FAIL）→ 先修到可交付，再開 PR。**例外**：`/next-package` 的 **scaffold**（迴圈開始前、尚無實作）見「觸發條件」與 Step 1。
+- 變更尚未驗證（測試紅燈、驗收 FAIL）→ 先修到可交付，再開 PR。**例外**：呼叫端標 **scaffold**（見 Step 1）。
 - 目前已在 `main`／`master` 且有未推送 commit → **先開分支**再交付：Cloud／Background → 呼叫 `/new-branch-cloud-agent`；本機有 JIRA → **暫停並請使用者手動執行** `/new-branch-feature`（該 skill 為 user-invoked，本 skill 無法代為觸發），再開本 skill。不要往主幹推。
 
 ---
@@ -43,9 +43,9 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 | `/next-task` 單任務循環中途 | ❌ 不執行（等 epic／sprint 收尾、使用者明確要求，或 Background Agent 外層收尾） |
 | `/next-task` 判定 epic 或 sprint 收尾，且為 Background／Cloud Agent | ✅ 執行 |
 | `/next-task` 判定 epic 或 sprint 收尾，且為本機互動 | ❌ 只建議；等使用者確認後再跑 |
-| `/next-package` scaffold（使用者已確認整包；任何 `/next-task` 之前） | ✅ 執行 scaffold：允許空 commit、不要求已驗證實作或完整 change-report |
-| `/next-package` 迴圈中進度更新或包尾 | ✅ 更新**同一張** draft（包尾才跑完整 `/change-report`） |
-| 本回合由 `/next-package` 編排，卻是 `/next-task` close-loop 自己想開 PR | ❌ 不執行（避免第二張 PR；由編排層呼叫本 skill） |
+| `/next-package` scaffold | ✅ 跳過 `/change-report`；更新或建立同一張 draft |
+| `/next-package` 迴圈進度或包尾 | ✅ 更新同一張 draft（包尾才跑 `/change-report`） |
+| `/next-task` close-loop 在 `/next-package` 編排中自行觸發 | ❌ 交付由 `/next-package` 呼叫本 skill |
 
 ---
 
@@ -63,7 +63,7 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 
 ### Step 1：產出變更報告
 
-**scaffold**（僅 `/next-package` 迴圈前）：跳過 `/change-report`。標題從整包目的濃縮；body 用呼叫端提供的整包計畫（見 `/next-package` reference「三、Draft 先於迴圈」）。工作區乾淨且相對 base 無 commit 時，允許呼叫端已做的 `--allow-empty` commit，或在本步代做一筆（message 含整包任務 ID）。
+**scaffold**（呼叫端標明）：跳過 `/change-report`。標題與 body 用呼叫端提供的整包計畫（權威：`/next-package` reference「三、scaffold」）。相對 base 無 commit 時，接受呼叫端已做的空 commit。
 
 其餘情況：
 
@@ -201,6 +201,6 @@ git push -u origin HEAD
 
 → 不呼叫本 skill；跑完實作 skill 後建議「若要交付可呼叫 `/pr-delivery`」，並可先給 `/change-report` 預覽。
 
-**`/next-package` 使用者已確認整包**
+**`/next-package` scaffold**
 
-→ scaffold：必要時空 commit → push → 建（或更新）draft，body 為整包計畫。此時尚未跑 `/next-task`。包尾再跑 change-report 更新同一張。
+→ 跳過 change-report → push → 建或更新同一張 draft。包尾再跑 change-report 更新那張。
