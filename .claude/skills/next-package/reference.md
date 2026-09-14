@@ -50,7 +50,7 @@
 
 | 結果 | 動作 |
 |---|---|
-| 1 件 | package 即該件；仍走 gate → scaffold → 一圈 `/next-task` |
+| 1 件 | package 即該件；仍走 gate → 交付前置 → 一圈 `/next-task` |
 | 2–5 件 | 出示 |
 | 超過 5 件 | 出示，gate 卡片寫超額理由（1.2 成對無法拆、同一 Phase 硬依賴鏈） |
 | 種子後沒有 1.2／1.3 訊號 | 建議 `/next-task` 並停止 |
@@ -67,24 +67,57 @@
 
 ## 二、分支
 
+### 是否為雲端開發環境
+
+先判定環境，再決定分支與是否 scaffold。**不確定 → 本機。** 本 skill 自己寫要開 PR，不算雲端證據。
+
+**雲端**（命中任一即可）：
+
+| 訊號 | 查法 |
+|---|---|
+| Cloud Agent 檔案 | 存在 `/exec-daemon/tmux.portal.conf` |
+| 系統自稱 | 系統提示寫明本回合是 Cloud／Background Agent（身分標示，不是「可以開 PR」） |
+| 雲端分支慣例 | 本回合系統提示要求新分支為 `cursor/<name>-<suffix>` |
+
+**本機**：上表皆未命中。
+
+**不算雲端**（單獨出現時維持本機）：有 `gh`、目前分支名是 `cursor/…`、本 skill／`/pr-delivery` 提到 draft、一般「可以 commit／push」。
+
+判定寫進 Step 3 卡片「環境」。使用者在確認則更正 → 以更正為準。
+
+### 交付
+
+| 環境與使用者意向 | 交付 |
+|---|---|
+| 雲端 | **scaffold**：確認後開 draft，loop 更新同一張 |
+| 本機，且使用者要「同一 PR／開 PR／交付」 | 同上 scaffold |
+| 本機，且未要求開 PR（含只說「整包」） | **本機不開 PR**：不呼叫 `/pr-delivery`、不為推 PR 而空 commit；包尾只 `/change-report`，可建議交付 |
+
+「整包同一 PR」視為已要求開 PR。只說「整包」不夠。
+
+### 分支動作
+
 | 狀態 | 動作 |
 |---|---|
-| Cloud／Background，目前主幹 | 計畫：確認後 `/new-branch-cloud-agent`；名稱取自 ticket 或切片（如 `sprd-1336-phase0`） |
+| 雲端，目前主幹 | 計畫：確認後 `/new-branch-cloud-agent`；名稱取自 ticket 或切片（如 `sprd-1336-phase0`） |
 | 已在本 package 對應的 `cursor/…` 或 `feature/{TICKET}` | 沿用 |
-| Cloud，目前 `cursor/…` 但主題／舊 PR 對不上 | 計畫：確認後從主幹另開 |
+| 雲端，目前 `cursor/…` 但主題／舊 PR 對不上 | 計畫：確認後從主幹另開 |
 | 本機，目前主幹 | 計畫：請使用者 `/new-branch-feature {JIRA}`；確認後若仍在主幹則停在 Step 4 |
 | 本機，已在對應 `feature/{TICKET}` | 沿用 |
 | 工作區髒且會擋切換 | stash 或請示 |
-| 同分支已有 PR 且主題是本 package | Step 4 更新那張 |
-| 同分支已有 PR 但主題對不上 | 當「對不上」另開 |
+| 交付＝scaffold，同分支已有 PR 且主題是本 package | Step 4 更新那張 |
+| 交付＝scaffold，同分支已有 PR 但主題對不上 | 當「對不上」另開 |
+| 交付＝本機不開 PR | 不管有沒有舊 PR，都不新建、不更新 |
 
-gate 前只寫本表決策。gate 後才執行開分支。loop 期間維持同一分支。
+gate 前只寫環境、交付、本表決策。gate 後才執行開分支。loop 期間維持同一分支。
 
 ---
 
 ## 三、scaffold
 
-gate 之後、第一圈 `/next-task` 之前，本 package 已有 draft PR URL。
+僅交付＝scaffold 時執行本節。本機不開 PR → 略過；Step 4 只處理分支。
+
+交付＝scaffold 時：gate 之後、第一圈 `/next-task` 之前，本 package 已有 draft PR URL。
 
 ### 3.1 讓分支推得出去
 
@@ -131,7 +164,7 @@ scaffold 的「跳過 change-report」由 `/pr-delivery` 執行；空 commit 訊
 
 ### 3.4 迴圈中更新
 
-每圈閉環後：push（若有新 commit），更新同一張 PR 的包內勾選與短狀態（PASS／PREPARED／PARTIAL／FAIL）。包尾（Step 6）才跑 `/change-report` + 一般模式 `/pr-delivery`。
+僅交付＝scaffold 且本包已有 PR 時：每圈閉環後 push（若有新 commit），更新同一張 PR 的包內勾選與短狀態（PASS／PREPARED／PARTIAL／FAIL）。包尾（Step 6）才跑 `/change-report`；交付＝scaffold 才再一般模式 `/pr-delivery`。
 
 ---
 
@@ -142,29 +175,29 @@ scaffold 的「跳過 change-report」由 `/pr-delivery` 執行；空 commit 訊
 | 層 | 責任 |
 |---|---|
 | `/next-task` | 一件：選定 → 分派 → close-loop → 停住 |
-| `/next-package` | 是否再呼叫 `/next-task`、是否中止、同一張 PR |
+| `/next-package` | 是否再呼叫 `/next-task`、是否中止、有本包 PR 時維持同一張 |
 
-呼叫 `/next-task` 時註明：本回合由 `/next-package` 編排、scaffold 已開；交付由編排層呼叫 `/pr-delivery`。
+呼叫 `/next-task` 時註明：本回合由 `/next-package` 編排；有 scaffold 則已開。交付由編排層決定是否呼叫 `/pr-delivery`（本機不開 PR → 不呼叫）。
 
 ### 4.2 中止（命中即停 loop）
 
 | 條件 | 動作 |
 |---|---|
 | 下一件可動工不在鎖定 package 內 | 包尾；Step 6 |
-| `/next-task` 因依賴全卡住而停 | 中止；更新 PR；回報 |
+| `/next-task` 因依賴全卡住而停 | 中止；有 PR 才更新；回報 |
 | 需 PO／PM 簽核 | 中止；回報待確認項 |
-| 驗收 FAIL | 中止；回報；PR 標明失敗件 |
+| 驗收 FAIL | 中止；回報；有 PR 才標明失敗件 |
 | 驗收 PARTIAL，且包內下一件依賴它 | 中止 |
 | 驗收 PARTIAL，且包內下一件不依賴它 | 記下，繼續 |
 | Test-First PREPARED，且對應實作在本 package | 繼續 |
 | `/fix` 暫停轉達 | 中止 |
 | 使用者叫停 | 中止 |
 
-中止後只更新本 package 的 PR 與回報。PREPARED 後中止 → 回報寫「PR 上仍是預期紅燈」。
+中止後：有本包 PR 才更新它；一律回報。PREPARED 後中止 → 回報寫「若有 PR：仍是預期紅燈」。
 
 ### 4.3 包尾
 
-鎖定清單每一個 ID 都有 close-loop 結論或已命中 4.2 一列 → Step 6。目錄仍有 package 外未完成項 → 維持 package 收尾，不當成 epic 收尾。
+鎖定清單每一個 ID 都有 close-loop 結論或已命中 4.2 一列 → Step 6。目錄仍有 package 外未完成項 → 維持 package 收尾，不當成 epic 收尾。本機不開 PR 的包尾不自動變成 epic 交付。
 
 ---
 
@@ -188,6 +221,18 @@ scaffold 的「跳過 change-report」由 `/pr-delivery` 執行；空 commit 訊
 
 → 建議 `/next-task`。
 
-### 5.4 本機在主幹
+### 5.4 本機在主幹、只說整包
 
-Step 2 計畫「請手動 `/new-branch-feature SPRD-1336`」，Step 3 仍出示卡片。確認後仍在主幹 → Step 4 停止。已在 `feature/…` 回來 → Step 4 做 scaffold，再 loop。
+未命中雲端訊號 → 環境＝本機；未要求開 PR → 交付＝本機不開 PR。Step 2 計畫「請手動 `/new-branch-feature SPRD-1336`」。Step 3 卡片寫環境／交付。確認後仍在主幹 → Step 4 停止。已在 `feature/…` 回來 → Step 4 **不** scaffold，進 loop。包尾只 `/change-report`。
+
+### 5.5 本機要同一 PR
+
+本機且使用者說「整包同一 PR」→ 交付＝scaffold。已在 `feature/…` → Step 4 做 scaffold，再 loop。
+
+### 5.6 雲端
+
+存在 `/exec-daemon/tmux.portal.conf`（或系統自稱 Cloud／Background）→ 環境＝雲端、交付＝scaffold。主幹則確認後 `/new-branch-cloud-agent`，再 scaffold。
+
+### 5.7 誤判更正
+
+卡片寫了雲端，使用者回「這是本機、不要開 PR」→ 改為本機不開 PR 再繼續；已誤開的 draft 不要當成本包必須維持。

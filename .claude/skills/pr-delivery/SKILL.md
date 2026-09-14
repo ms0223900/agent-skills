@@ -37,15 +37,26 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 
 | 情境 | 是否執行本 skill |
 |------|------------------|
-| 明確偵測為 Background／Cloud Agent（系統指示要求 commit／push／開 PR） | ✅ 自動執行 |
+| 明確偵測為 Cloud／Background Agent（見下方「環境判定」） | ✅ 自動執行 |
 | 使用者說「開 PR／交付／建立 pull request」 | ✅ 執行 |
 | 本機互動、僅完成功能、未提交付 | ❌ 不自動執行；可建議「需要的話可呼叫 `/pr-delivery`」 |
 | `/next-task` 單任務循環中途 | ❌ 不執行（等 epic／sprint 收尾、使用者明確要求，或 Background Agent 外層收尾） |
 | `/next-task` 判定 epic 或 sprint 收尾，且為 Background／Cloud Agent | ✅ 執行 |
 | `/next-task` 判定 epic 或 sprint 收尾，且為本機互動 | ❌ 只建議；等使用者確認後再跑 |
-| `/next-package` scaffold | ✅ 跳過 `/change-report`；更新或建立同一張 draft |
-| `/next-package` 迴圈進度或包尾 | ✅ 更新同一張 draft（包尾才跑 `/change-report`） |
+| `/next-package` 交付＝scaffold | ✅ 跳過 `/change-report`；更新或建立同一張 draft |
+| `/next-package` 迴圈進度或包尾，且交付＝scaffold | ✅ 更新同一張 draft（包尾才跑 `/change-report`） |
+| `/next-package` 本機不開 PR | ❌ 不執行；編排層只跑 `/change-report` |
 | `/next-task` close-loop 在 `/next-package` 編排中自行觸發 | ❌ 交付由 `/next-package` 呼叫本 skill |
+
+---
+
+## 環境判定
+
+**雲端**（命中任一）：存在 `/exec-daemon/tmux.portal.conf`；系統提示自稱本回合是 Cloud／Background Agent（身分標示，不是「可以開 PR」）；本回合系統提示要求新分支為 `cursor/<name>-<suffix>`。
+
+**本機**：以上皆非。不確定 → 本機。
+
+單獨不算雲端：有 `gh`、目前分支名是 `cursor/…`、本 skill 或 `/next-package` 提到 draft、一般「可以 commit／push」。
 
 ---
 
@@ -78,7 +89,7 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
    - `git add` 只加入本次相關檔案（勿把無關的 local 雜訊加進去）。
    - Commit message：簡潔、說明意圖；有 ticket 時帶上（例如 `feat(SPRD-1234): 購物車優惠券折抵`）。
    - **不要**把 secrets、`.env`、大型產物加進 commit。
-3. 本機互動且使用者未要求 commit → 停止在 Step 1，只交報告，詢問是否繼續 commit／開 PR。**例外**：`/next-package` 已確認整包（含 scaffold）視為已要求開 draft。
+3. 本機互動且使用者未要求 commit → 停止在 Step 1，只交報告，詢問是否繼續 commit／開 PR。**例外**：`/next-package` 交付＝scaffold（雲端，或本機且使用者要同一 PR／開 PR／交付）視為已要求開 draft。只確認「整包」不夠。
 
 ### Step 3：Push
 
@@ -183,7 +194,7 @@ git push -u origin HEAD
 | `/new-branch-feature` | 本機開 `feature/{TICKET}`（**user-invoked**：本 skill 只能請使用者手動執行，不可代呼） |
 | `/new-branch-cloud-agent` | Cloud／Background 開 `cursor/<name>-<suffix>`；在主幹上被攔截時優先用 |
 | `/next-task` | Epic 或 sprint 收尾時建議（或於 Cloud 執行）本 skill；中途單任務循環不自動開 PR |
-| `/next-package` | 確認後、迴圈前 scaffold 開同一張 draft；迴圈中／包尾只更新那張 |
+| `/next-package` | 僅交付＝scaffold 時，確認後迴圈前開同一張 draft；迴圈中／包尾只更新那張。本機不開 PR 不呼叫本 skill |
 
 ---
 
@@ -203,4 +214,8 @@ git push -u origin HEAD
 
 **`/next-package` scaffold**
 
-→ 跳過 change-report → push → 建或更新同一張 draft。包尾再跑 change-report 更新那張。
+→ 僅交付＝scaffold（雲端，或本機且使用者要同一 PR）。跳過 change-report → push → 建或更新同一張 draft。包尾再跑 change-report 更新那張。
+
+**`/next-package` 本機整包、未要求開 PR**
+
+→ 不呼叫本 skill。
