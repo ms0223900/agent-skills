@@ -164,7 +164,7 @@ scaffold 的「跳過 change-report」由 `/pr-delivery` 執行；空 commit 訊
 
 ### 3.4 迴圈中更新
 
-僅本包已有 PR 時：每圈閉環後 push（若有新 commit），更新同一張 PR 的包內勾選與短狀態（PASS／PREPARED／PARTIAL／FAIL）。包尾（Step 6）才跑 `/change-report`；有本包 PR 才再一般模式 `/pr-delivery`。
+僅交付＝scaffold 且本包已有 PR 時：每圈閉環後 push（若有新 commit），更新同一張 PR 的包內勾選與短狀態（PASS／PREPARED／PARTIAL／FAIL）。包尾（Step 6）才跑 `/change-report`；交付＝scaffold 才再一般模式 `/pr-delivery`。
 
 ---
 

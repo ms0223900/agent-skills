@@ -69,9 +69,9 @@ description: Package related unfinished US and loop /next-task. Cloud or 同一 
 
 ### Step 4：執行分支與交付前置
 
-載入 [reference.md](reference.md)「二、分支」與「三、scaffold」。gate 通過後執行 Step 2 計畫。
+載入 [reference.md](reference.md)「二、分支」。gate 通過後執行 Step 2 計畫。
 
-- 交付＝scaffold → 直到本包有 draft PR URL。
+- 交付＝scaffold → 再載入「三、scaffold」，直到本包有 draft PR URL。
 - 交付＝本機不開 PR → 只確保非主幹工作分支；不呼叫 `/pr-delivery`、不為推 PR 而空 commit。
 
 **完成條件**：已在非主幹工作分支；交付＝scaffold 則另有本包 URL。缺分支，或 scaffold 缺 URL → 停止（請使用者把 URL 帶回）。
@@ -80,7 +80,7 @@ description: Package related unfinished US and loop /next-task. Cloud or 同一 
 
 ### Step 5：loop
 
-每圈呼叫 `/next-task`。返回後載入 [reference.md](reference.md)「四、迴圈」，只依該表決定下一動。每圈只帶當前任務全文。本包已有 PR 時，閉環後更新同一張 checklist（見〈三、scaffold〉3.4）。
+每圈呼叫 `/next-task`。返回後載入 [reference.md](reference.md)「四、迴圈」，只依該表決定下一動。每圈只帶當前任務全文。交付＝scaffold 時，閉環後更新同一張 checklist（見〈三、scaffold〉3.4）。
 
 **完成條件**：鎖定清單每一個 ID 都有 close-loop 結論（PASS／PREPARED／PARTIAL／FAIL）或已命中一列中止。少一個 ID 就繼續 loop。
 
@@ -88,6 +88,6 @@ description: Package related unfinished US and loop /next-task. Cloud or 同一 
 
 ### Step 6：包尾
 
-呼叫 `/change-report`。交付＝scaffold（或本包已有 PR）→ 再以一般模式呼叫 `/pr-delivery` 更新同一張 draft。本機不開 PR → 不呼叫 `/pr-delivery`；可提示需要的話再開。回報目錄、每個 ID 的結論、有則 PR URL、是否中止。
+呼叫 `/change-report`。交付＝scaffold → 再以一般模式呼叫 `/pr-delivery` 更新同一張 draft。交付＝本機不開 PR → 不呼叫 `/pr-delivery`；可提示需要的話再開。回報目錄、每個 ID 的結論、有則 PR URL、是否中止。
 
-**完成條件**：鎖定 ID 皆有結論；有本包 PR 則已更新為包尾，否則已交出 change-report。
+**完成條件**：鎖定 ID 皆有結論；交付＝scaffold 則同一張已更新為包尾，否則已交出 change-report。
