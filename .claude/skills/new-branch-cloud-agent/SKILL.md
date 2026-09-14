@@ -20,7 +20,7 @@ description: 為 Cursor Background／Cloud Agent 建立符合雲端慣例的工�
 - 目前是 Background／Cloud Agent，系統指示分支須為 `cursor/...`。
 - 使用者說「開雲端分支」「cloud agent 分支」「依 cloud 規則開 branch」。
 - `/pr-delivery` Step 0 發現人在主幹上、需要先開雲端工作分支。
-- `/next-package` 確認整包後，需要開雲端工作分支才能 scaffold draft。
+- `/next-package` 判定為雲端且確認整包後，目前主幹、需要開雲端工作分支才能 scaffold draft。
 
 **何時不用（改用其他 skill）**：
 
