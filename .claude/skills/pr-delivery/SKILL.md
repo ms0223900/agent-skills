@@ -44,7 +44,7 @@ description: 將已完成的變更交付為 GitHub draft Pull Request，commit�
 | `/next-task` 判定 epic 或 sprint 收尾，且為 Background／Cloud Agent | ✅ 執行 |
 | `/next-task` 判定 epic 或 sprint 收尾，且為本機互動 | ❌ 只建議；等使用者確認後再跑 |
 | `/next-package` 交付＝scaffold | ✅ 跳過 `/change-report`；更新或建立同一張 draft |
-| `/next-package` 迴圈進度或包尾，且本包已有 PR | ✅ 更新同一張 draft（包尾才跑 `/change-report`） |
+| `/next-package` 迴圈進度或包尾，且交付＝scaffold | ✅ 更新同一張 draft（包尾才跑 `/change-report`） |
 | `/next-package` 本機不開 PR | ❌ 不執行；編排層只跑 `/change-report` |
 | `/next-task` close-loop 在 `/next-package` 編排中自行觸發 | ❌ 交付由 `/next-package` 呼叫本 skill |
 
