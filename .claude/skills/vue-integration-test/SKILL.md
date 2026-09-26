@@ -5,7 +5,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 # Vue 2 Integration Test Workflow
 
-本專案 Vue 2 + Vuex 元件整合測試的撰寫指南，沿用本專案既有參考（`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`、`feature/SPRD-660` 分支之 `SPRD-660-high-precision.integration.test.js`）與 [@vue/test-utils v1 best practices](https://v1.test-utils.vuejs.org/)。
+本專案 Vue 2 + Vuex 元件整合測試的撰寫指南，沿用本專案既有參考（`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`——僅參考其 fixture 與 describe 結構、`feature/SPRD-660` 分支之 `SPRD-660-high-precision.integration.test.js`）與 [@vue/test-utils v1 best practices](https://v1.test-utils.vuejs.org/)。
 
 ## 何時使用
 
@@ -20,9 +20,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 - 要測哪個元件（路徑＋計算屬性／分支）？
 - 要覆蓋哪些情境？（對應 fixture 或 user story 的 Scenario）
-- 斷言哪一層？
-  - **DOM 層（預設）**：`wrapper.findAll('.some-class').length`、`wrapper.text()`、`.emitted()` — 最接近使用者實際看到的結果。
-  - **Computed 層**：直接讀 `wrapper.vm.xxx` 是斷言內部實作，DOM 層已涵蓋同一件事。排序、計算這類邏輯若值得單獨鎖住，抽成 util／getter 交給 `unit-test`，不在元件測試裡讀 `vm`。
+- 斷言使用者可觀察的輸出：`wrapper.findAll('[data-testid="row"]')`、`wrapper.text()`、`.attributes()`、`.emitted()`。排序、計算這類邏輯若值得單獨鎖住，抽成 util／getter 交給 `unit-test`。
 - 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單（特別留意「mock store 直接回傳算好的結果，再斷言畫面顯示它」）。
 
 **完成條件**：計畫或回覆中每個情境都有一行把關答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
@@ -61,7 +59,6 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 ### 6. 斷言撰寫建議（@vue/test-utils best practices）
 
 - 以「使用者可觀察的行為」為主：`wrapper.text()`、`findAll('.selector').length`、`.attributes()`、`.classes()`、`.emitted()`。
-- 避免斷言 implementation detail（如 `vm` 內部方法名），除非測試就是為了鎖定該 computed 的行為。
 - **Selector 選擇**：
   - 穩定：`data-testid`（推薦新增）、角色語意 class、元件 stub 名 `findComponent({ name: 'X' })`。
   - 易碎：動態 class、CSS 模組化 hash、index-based 存取。

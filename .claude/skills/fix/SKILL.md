@@ -111,9 +111,8 @@ description: Fix ESLint, TypeScript, test, or build errors with clear tool outpu
 - 各類型原則（反模式清單見 [reference.md](reference.md)）：
   - **ESLint**：修規則指出的實際問題；不預設用 `eslint-disable` 打發，除非規則在此處確實不適用，且需在該行加註解說明原因。
   - **TypeScript**：修型別定義或邏輯本身；避免把 `any` / `as any` / `@ts-ignore` 當成預設解法。
-  - **Test**：若測試正確表達預期行為 → 修正產品程式碼；只有在測試本身過時或寫錯時才改測試，且需在總結中說明理由，不要為了讓測試通過而刪減斷言。
-    - 失敗發生在程式碼剛被改動之後 → 依 [reference-test-gate.md](reference-test-gate.md)「既有測試變紅」分辨是該更新期望值、是回歸，還是測試綁在實作上；「行為沒變」要有該節要求的證據才成立。
-  - **補回歸測試**：根因是產品 bug、且現有失敗測試沒有直接鎖住這個根因時，在 owner 邊界補**一支**回歸測試，並依 [reference-test-gate.md](reference-test-gate.md)「回歸測試」實證：修正前因該 bug 而紅、修正後轉綠。
+  - **Test**：依 [reference-test-gate.md](reference-test-gate.md)「既有測試變紅」判定是該更新期望值、是回歸（修產品碼），還是測試綁在實作上（在 owner 邊界改寫）；需在總結中說明依據，不要為了讓測試通過而刪減斷言。
+    - 根因是產品 bug、且現有失敗測試沒有直接鎖住這個根因時，在 owner 邊界補**一支**回歸測試，並依同檔「回歸測試」實證：修正前因該 bug 而紅、修正後轉綠。
   - **Compile/Build**：修設定或程式碼本身；不要用大範圍 ignore/skip 掩蓋問題。
 
 ### Step 6：驗證直到全部通過

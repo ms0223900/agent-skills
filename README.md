@@ -65,6 +65,10 @@ npx skills add ms0223900/agent-skills \
 npx skills add ms0223900/agent-skills \
   --skill refactor-scan --skill resolve-tracking-dir --skill next-task --skill refactor --skill distill-playbook -y
 
+# test-audit（Step 5 會呼叫 independent-review，Step 6 交付走 change-report）
+npx skills add ms0223900/agent-skills \
+  --skill test-audit --skill independent-review --skill change-report -y
+
 # doc-trim / adjust 家族（選定追蹤目錄）
 npx skills add ms0223900/agent-skills \
   --skill doc-trim --skill adjust --skill resolve-tracking-dir -y
@@ -149,7 +153,7 @@ npx skills add ms0223900/agent-skills \
 
 **建議鏈結**：
 
-1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）→ `/change-report`
+1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）或 `/test-audit` 清完一批 → `/change-report`
 2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` `close-loop.md`）→ `/pr-delivery`
 3. 整包／同一 PR → `/next-package`（本機只說整包：不自動開 PR；雲端或使用者要同一 PR：確認後先 scaffold draft，再 loop `/next-task`；包尾再更新同一張 PR）
 4. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
@@ -195,7 +199,7 @@ npx skills add ms0223900/agent-skills \
 └── ...
 dev/shared/
 ├── stack-detect.source.md    # 維護端單一真相來源（非 skill）
-└── test-value-gate.source.md # 測試把關四題／垃圾測試清單／保留標準
+└── test-value-gate.source.md # 測試把關：四題、既有測試變紅、回歸測試、垃圾清單、保留標準
 scripts/
 └── sync-shared-refs.sh       # 把來源鋪進各 skill 的 reference*.md
 ```

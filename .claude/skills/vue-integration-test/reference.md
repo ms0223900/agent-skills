@@ -73,7 +73,7 @@ async function mountAndSetup(input) {
   return wrapper;
 }
 
-// 8. Assertion helpers — 從 DOM 取值，收斂重複（不讀 wrapper.vm）
+// 8. Assertion helpers — 從 DOM 取值，收斂重複；attributes() 回傳字串，fixture 的 expected ID 也用字串
 const toRowIDs = (wrapper) => wrapper.findAll('[data-testid="target-row"]').wrappers.map(w => w.attributes('data-id'));
 
 // 9. describe 結構對齊 fixture／Scenario
