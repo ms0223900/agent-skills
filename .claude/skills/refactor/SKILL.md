@@ -124,6 +124,8 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 
 若任務檔案沒有這個欄位（純重構、無對應 US 流程）→ 維持既有慣例：重構前後跑一次既有測試確認沒有引入回歸即可，不強制新增測試。
 
+重構後有既有測試變紅時，依 [reference-test-red.md](reference-test-red.md)「既有測試變紅」分辨後處理。沒有對應 US 的純重構不會有「行為本來就該變」這一列，只可能是回歸或綁實作；在 Step 7 總結中列出改寫了哪些測試。
+
 ### Step 7: 驗證 / Validation
 
 完成後必須：
@@ -144,6 +146,7 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 - [ ] 重構類型與範圍已評估（Small/Medium/Large）
 - [ ] 若 Medium/Large，已產出 Plan 或與使用者確認切分
 - [ ] 若任務有「測試策略」欄位，已依 Test-First/Test-After/Exploratory 執行；沒有的話已跑既有測試確認無回歸
+- [ ] 重構後變紅的測試已分辨是回歸（修重構）還是綁實作（改到 owner 邊界重寫並列出）
 - [ ] 符合偵測到的技術棧慣例與 `AGENTS.md`（樣式作用域、i18n、專案工具庫等）
 - [ ] UI：列表有穩定 key、props 有型別、模板/JSX 無複雜表達式
 - [ ] 狀態：依棧慣例更新 state（Vuex mutations / Pinia actions / Zustand set 等）

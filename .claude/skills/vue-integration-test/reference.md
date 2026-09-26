@@ -12,8 +12,7 @@
 /**
  * <JIRA>：<功能簡述> — <Component>.vue 元件層整合測試
  *
- * 覆蓋：<具體分支／computed> (<檔案>:<行號>)
- *       與 DOM 輸出 (<DOM 選擇器>) 是否與 fixture 對齊。
+ * 覆蓋：<具體分支> (<檔案>:<行號>) 的 DOM 輸出 (<DOM 選擇器>) 是否與 fixture 對齊。
  * 情境：Scenario 1（...）、Scenario 2（...）
  */
 
@@ -74,20 +73,15 @@ async function mountAndSetup(input) {
   return wrapper;
 }
 
-// 8. Assertion helpers — 把取值邏輯收斂，降低重複
-const toIDs = (wrapper) => wrapper.vm.SomeComputed.map(x => x.id);
-const toDomCount = (wrapper) => wrapper.findAll('.target-row').length;
+// 8. Assertion helpers — 從 DOM 取值，收斂重複；attributes() 回傳字串，fixture 的 expected ID 也用字串
+const toRowIDs = (wrapper) => wrapper.findAll('[data-testid="target-row"]').wrappers.map(w => w.attributes('data-id'));
 
 // 9. describe 結構對齊 fixture／Scenario
 describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
   describe('Scenario 1 — ...', () => {
-    it('computed 層順序與 expected 一致', async () => {
+    it('依 expected 順序渲染每一列', async () => {
       const wrapper = await mountAndSetup(fixtureA.input);
-      expect(toIDs(wrapper)).toEqual(fixtureA.expected.order);
-    });
-    it('DOM 層渲染數量對應 expected', async () => {
-      const wrapper = await mountAndSetup(fixtureA.input);
-      expect(toDomCount(wrapper)).toBe(fixtureA.expected.order.length);
+      expect(toRowIDs(wrapper)).toEqual(fixtureA.expected.order);
     });
   });
 });
@@ -119,7 +113,7 @@ describe('<JIRA> <Component>.vue 渲染整合測試 — <基準>', () => {
 
 - `tests/unit/components/BetViewList/SOPS-3401-duplicate-match-bold.integration.test.ts` — 型別標註參考（`Wrapper`／`Store`、`interface` fixture、mock `render` 簽名）。
 - `tests/unit/components/BetViewList/__helpers__/mountBetViewList.ts` — 多個整合測試檔共用 `createStore()`/`mountComponent()` 與子元件 mock factory 的抽取範例（SPRD-925）；因 babel-plugin-jest-hoist 限制 `jest.mock(...)` factory 只能參照名稱以 `mock` 開頭的 import 變數，各測試檔頂層仍需自行呼叫 `jest.mock('@/components/X', () => mockXFactory())`，只是不用重複撰寫 factory 內容本身；同一個檔案也示範了「非泛型函式 + `as Wrapper<Vue & XxxVm>` 呼叫端斷言」的寫法，避免本專案 babel-eslint parser 對泛型函式語法的 parsing error。
-- `tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js` — MoreGame.vue 棒球排序，雙層斷言。
+- `tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js` — MoreGame.vue 棒球排序（fixture 與 describe 結構可參考；該檔的 computed 層斷言屬舊寫法，新測試只斷言使用者可觀察的結果：DOM、`.emitted()`）。
 - `feature/SPRD-660` 分支 `tests/unit/components/bet/SPRD-660-high-precision.integration.test.js` — BetViewList／ListCardItem／StrayCount 高精度計算，factory + stubs pattern。
 - `tests/unit/__fixtures__/baseball-sorting/` — JSON fixture 結構範例。
 - [@vue/test-utils v1 文件](https://v1.test-utils.vuejs.org/)。

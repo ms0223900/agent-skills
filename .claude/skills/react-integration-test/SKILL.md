@@ -22,7 +22,9 @@ description: Guides writing React / Next.js component tests with React Testing L
 - 測哪個元件（路徑＋要覆蓋的 props/互動分支）？
 - 覆蓋哪些情境？對應 fixture 或 user story 的 Scenario。
 - **核心原則：測行為，不測實作**——斷言使用者看得到/做得到的事（畫面文字、可互動元素，或傳入 `vi.fn()`／`jest.fn()` callback 後其是否以正確資料被呼叫），不斷言元件內部 state、hook 回傳值本身、或私有方法。
-- 不要用「能不能整個重寫實作、輸入輸出不變、卻完全不用改這支測試」當標準——若答案是不能，代表測到了實作細節。
+- 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單。
+
+**完成條件**：計畫或回覆中每個情境都有一行把關答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
 
 ### 2. 命名與檔案位置
 
@@ -97,7 +99,7 @@ Client Component 與一般 React 元件測試方式相同；Server Component（a
 
 ### 12. Mutation Test（自我驗證）
 
-完成綠燈後，把被測的核心互動邏輯反向破壞一次（例如把驗證條件反過來），確認測試會紅，證明測試綁定的是行為而非巧合通過。驗證完記得還原並再跑一次確認回綠。
+綠燈後依把關第 2 題做 mutation test（例如把驗證條件反過來），證明測試綁定的是行為而非巧合通過。
 
 ---
 
@@ -106,7 +108,7 @@ Client Component 與一般 React 元件測試方式相同；Server Component（a
 1. 先說明：要覆蓋的元件路徑、情境、要斷言的使用者行為。
 2. 快速確認元件依賴的 Provider/Context/Store/API，決定要包哪些真實 Provider、要用 MSW mock 哪些 endpoint。
 3. 寫 test → 跑 → 依失敗訊息補齊 fixture/handler。
-4. 綠燈後做一次 mutation test 驗證，再還原。
+4. 綠燈後依把關第 2 題做 mutation test。
 5. 最後回報：測試檔位置、通過數、mutation test 結果。
 
 ## 參考資源

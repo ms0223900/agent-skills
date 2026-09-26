@@ -65,12 +65,16 @@ npx skills add ms0223900/agent-skills \
 npx skills add ms0223900/agent-skills \
   --skill refactor-scan --skill resolve-tracking-dir --skill next-task --skill refactor --skill distill-playbook -y
 
+# test-audit（沒有跨 skill 相對路徑，但 Step 5 以 slash 呼叫 independent-review、Step 6 交付走 change-report，建議一起裝）
+npx skills add ms0223900/agent-skills \
+  --skill test-audit --skill independent-review --skill change-report -y
+
 # doc-trim / adjust 家族（選定追蹤目錄）
 npx skills add ms0223900/agent-skills \
   --skill doc-trim --skill adjust --skill resolve-tracking-dir -y
 ```
 
-技術棧偵測（`reference.md` / `reference-stack.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust` 等**不需要**額外指令。維護端來源在 `dev/shared/stack-detect.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
+技術棧偵測（`reference.md` / `reference-stack.md`）與測試把關（`reference-test-gate.md`、`reference-test-red.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust`／`unit-test` 等**不需要**額外指令。維護端來源在 `dev/shared/*.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
 
 ### User-invoked vs model-invoked
 
@@ -118,6 +122,8 @@ npx skills add ms0223900/agent-skills \
 | `react-integration-test` | React / Next 元件測試（RTL + user-event） |
 | `e2e-test` | E2E（Playwright，BDD / AC 驅動） |
 
+上述測試 skill、`feature`／`fix`／`adjust`／`refactor` 與 `test-audit` 共用 `reference-test-gate.md`（把關四題、垃圾測試清單、保留標準）；`feature`／`fix`／`adjust`／`refactor` 另有 `reference-test-red.md`（既有測試變紅的分辨、回歸測試須先紅）。稽核既有測試用 `/test-audit`（手動）。
+
 ### 環境／預覽
 
 | Skill | 說明 |
@@ -147,7 +153,7 @@ npx skills add ms0223900/agent-skills \
 
 **建議鏈結**：
 
-1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）→ `/change-report`
+1. 實作收尾（`feature`／`fix`／`adjust`／`refactor`）或 `/test-audit` 清完一批 → `/change-report`
 2. Background Agent、或使用者要求交付、或 **epic／sprint 收尾**（見 `next-task` `close-loop.md`）→ `/pr-delivery`
 3. 整包／同一 PR → `/next-package`（本機只說整包：不自動開 PR；雲端或使用者要同一 PR：確認後先 scaffold draft，再 loop `/next-task`；包尾再更新同一張 PR）
 4. 開 PR 後可選 → `pr-acceptance-checklist`（`for-review`）貼成 comment
@@ -161,6 +167,7 @@ npx skills add ms0223900/agent-skills \
 | `wrap-up` **（手動）** | Router：列出下方收尾類 skill 與何時用（含上線前 `/security-audit`），本身不執行 |
 | `comment-trim` **（手動）** | 精簡功能開發期間累積的贅述註解 |
 | `doc-trim` **（手動）** | 精簡 US / spec / playbook 敘述文字（保留結構） |
+| `test-audit` **（手動）** | 稽核既有測試（路徑／diff／整個專案），附證據找出低價值、綁實作、重複的測試，確認後分批清理 |
 | `distill-playbook` **（手動）** | 把 epic/feature 驗收經驗蒸餾進 Playbook / Skill |
 | `weekly-branch-report` **（手動）** | 依作者與日期整理「已合併 uat / 進行中」分支週報 |
 
@@ -172,7 +179,7 @@ npx skills add ms0223900/agent-skills \
 .claude/skills/
 ├── feature/
 │   ├── SKILL.md
-│   └── reference.md          # synced from dev/shared
+│   └── reference*.md         # synced from dev/shared
 ├── wrap-up/SKILL.md
 ├── grill-me/SKILL.md
 ├── grilling/SKILL.md
@@ -191,7 +198,9 @@ npx skills add ms0223900/agent-skills \
 │   └── reference-*.md
 └── ...
 dev/shared/
-└── stack-detect.source.md    # 維護端單一真相來源（非 skill）
+├── stack-detect.source.md    # 維護端單一真相來源（非 skill）
+├── test-value-gate.source.md # 測試把關：四題、垃圾清單、保留標準
+└── test-red-handling.source.md # 既有測試變紅、回歸測試、取得改動前的結果
 scripts/
 └── sync-shared-refs.sh       # 把來源鋪進各 skill 的 reference*.md
 ```

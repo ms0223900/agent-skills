@@ -1,6 +1,6 @@
 ---
 name: change-report
-description: 以 git diff 產出適合手機審閱的分層變更報告，不修改程式碼、不建立 PR。使用時機：使用者說「幫我寫變更摘要」「視覺化這次 diff」「PR 導讀」。Reachable by /feature、/fix、/adjust、/refactor、/pr-delivery、/next-package（包尾）。
+description: 以 git diff 產出適合手機審閱的分層變更報告，不修改程式碼、不建立 PR。使用時機：使用者說「幫我寫變更摘要」「視覺化這次 diff」「PR 導讀」。Reachable by /feature、/fix、/adjust、/refactor、/pr-delivery、/next-package（包尾）、/test-audit。
 ---
 
 # 變更報告產出（Change Report）

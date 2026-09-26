@@ -18,12 +18,12 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 1. 釐清測試目標
 
-- 要測哪個元件（路徑＋計算屬性／分支）？
+- 要測哪個元件（路徑＋要覆蓋的分支）？
 - 要覆蓋哪些情境？（對應 fixture 或 user story 的 Scenario）
-- 斷言哪幾層？
-  - **Computed 層**：直接讀 `wrapper.vm.xxx` — 穩定、易斷言，但偏實作細節。
-  - **DOM 層**：`wrapper.findAll('.some-class').length` 或 `wrapper.text()` — 最接近使用者實際看到的結果。
-  - **建議**：重要情境兩層都斷言，互為交叉驗證。
+- 斷言使用者可觀察的輸出：`wrapper.findAll('[data-testid="row"]')`、`wrapper.text()`、`.attributes()`、`.emitted()`。排序、計算這類邏輯若值得單獨鎖住，抽成 util／getter 交給 `unit-test`。
+- 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單（特別留意「mock store 直接回傳算好的結果，再斷言畫面顯示它」）。
+
+**完成條件**：計畫或回覆中每個情境都有一行把關答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
 
 ### 2. 命名與檔案位置
 
@@ -40,6 +40,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 4. Mock store 要點
 
+- mock 的是**輸入**（元件讀的原始 state／getter），受測的計算留在元件裡跑；getter 直接回傳該元件應算出的結果，就等於在測 mock。
 - **只塞元件實際讀到的欄位**。方法：`grep -n 'this\.\$store\.state\.'` 與 `mapState\|mapGetters` 找出依賴。
 - 每個 module 設定 `namespaced: true`（若專案慣例是 namespaced store）。
 - 若元件會 `commit` mutation：填入空函式 `mutations: { xxx() {} }`；若 `dispatch` action：填 `actions: { xxx: () => Promise.resolve() }`。
@@ -57,8 +58,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 6. 斷言撰寫建議（@vue/test-utils best practices）
 
-- 以「使用者可觀察的行為」為主：`wrapper.text()`、`findAll('.selector').length`、`.attributes()`、`.classes()`、`.emitted()`。
-- 避免斷言 implementation detail（如 `vm` 內部方法名），除非測試就是為了鎖定該 computed 的行為。
+- 以「使用者可觀察的行為」為主：`wrapper.text()`、`findAll('[data-testid="x"]')`、`.attributes()`、`.emitted()`；`.classes()` 只在 class 本身就是使用者看得到的狀態（例如 `is-active`）時用。
 - **Selector 選擇**：
   - 穩定：`data-testid`（推薦新增）、角色語意 class、元件 stub 名 `findComponent({ name: 'X' })`。
   - 易碎：動態 class、CSS 模組化 hash、index-based 存取。
@@ -71,7 +71,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 8. Mutation Test（自我驗證）
 
-完成綠燈後，**把被測的核心邏輯反向破壞一次**（例如把排序改成升序），確認測試會紅。這步證明測試是在綁定邏輯而非 fixture 本身。改完記得還原並再跑一次確認回綠。
+綠燈後依把關第 2 題做 mutation test（例如把排序改成升序），證明測試綁定的是邏輯而非 fixture 本身。
 
 ### 9. 執行與整合
 
@@ -88,10 +88,10 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ## 產出時的溝通
 
-1. 先說明：要覆蓋的元件路徑、情境、斷言層。
+1. 先說明：要覆蓋的元件路徑、情境、要斷言的使用者可觀察結果。
 2. 快速探 template（上游 `v-if`）與元件依賴（`$store.state.*`、`mapState`、`$SportLib` 等），決定 mock 範圍。
 3. 寫 test → 跑 → 依失敗訊息補 fixture 欄位（常見：`EvtStatus`、`Noshow`、`Status`）。
-4. 綠燈後做一次 mutation test 驗證，再還原。
+4. 綠燈後依把關第 2 題做 mutation test。
 5. 最後回報：測試檔位置、通過數、mutation test 結果、發現的關鍵門檻（供其他測試撰寫者參考）。
 
 ## 參考實例
