@@ -112,6 +112,8 @@ description: Fix ESLint, TypeScript, test, or build errors with clear tool outpu
   - **ESLint**：修規則指出的實際問題；不預設用 `eslint-disable` 打發，除非規則在此處確實不適用，且需在該行加註解說明原因。
   - **TypeScript**：修型別定義或邏輯本身；避免把 `any` / `as any` / `@ts-ignore` 當成預設解法。
   - **Test**：若測試正確表達預期行為 → 修正產品程式碼；只有在測試本身過時或寫錯時才改測試，且需在總結中說明理由，不要為了讓測試通過而刪減斷言。
+    - 失敗源自**行為不變的重構**（輸出不變，只是改名、拆函式、內部呼叫順序或 mock 對象變了）→ 這支測試綁在實作上：依 [reference-test-gate.md](reference-test-gate.md) 在 owner 邊界改寫成斷言可觀察結果，而不是把期望值或 mock 對齊新的內部結構；總結中列出改寫了哪些測試與理由。
+  - **補回歸測試**：根因是產品 bug、且現有失敗測試沒有直接鎖住這個根因時，在 owner 邊界補**一支**回歸測試，並依 [reference-test-gate.md](reference-test-gate.md)「回歸測試」實證：修正前因該 bug 而紅、修正後轉綠。
   - **Compile/Build**：修設定或程式碼本身；不要用大範圍 ignore/skip 掩蓋問題。
 
 ### Step 6：驗證直到全部通過
@@ -148,6 +150,7 @@ description: Fix ESLint, TypeScript, test, or build errors with clear tool outpu
 - [ ] 若證據不足，已誠實告知並具體列出需要的資訊（API response / log / 截圖），未包裝未驗證的猜測為確定修法
 - [ ] 修正的是根因而非症狀（未濫用 `eslint-disable` / `any` / `@ts-ignore` / 刪測試斷言）
 - [ ] 原始失敗指令已重跑並通過；相關範圍已再次確認無新增錯誤/迴歸
+- [ ] 若補了回歸測試，已實證它在修正前因該 bug 而紅、修正後轉綠；若改寫了綁實作的測試，已在總結列出
 
 ---
 

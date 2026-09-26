@@ -78,8 +78,8 @@ description: Adjust an existing feature — update US, test strategy, implement,
 **規則：不論選哪一種，都要在調整說明/回覆中交代「測試何時補、補在哪裡」；若判定不寫自動化測試，必須明確說明原因（例如純樣式調整、範圍太小、規格仍在確認等），不能省略不談。**
 
 - **若判定 Test-First**：
-  1. 搜尋與被修改功能相關的既有測試檔（`*.test.*`/`*.spec.*`）；存在則補充 test case，不存在則依專案慣例新建。
-  2. 撰寫會反映本次調整行為的測試，跑一次確認是紅燈，且紅燈原因確實是「行為尚未調整」而非測試本身寫錯。
+  1. 搜尋與被修改功能相關的既有測試檔（`*.test.*`/`*.spec.*`）；存在則補充 test case，不存在則依專案慣例新建。新 case 先過 [reference-test-gate.md](reference-test-gate.md) 的把關四題：既有測試已守住的行為不重寫，能擴充既有 `it.each`／table-driven case 就不新增近似測試。
+  2. 撰寫會反映本次調整行為的測試，跑一次確認是紅燈，且紅燈原因確實是「行為尚未調整」而非測試本身寫錯。調整起因是既有行為的 bug 時，這支就是回歸測試，紅燈要對上 bug 症狀（見 reference-test-gate.md「回歸測試」）。
   3. 進入 Step 4，實作至該測試轉綠。
 - **若判定 Test-After**：先進入 Step 4 完成調整，再回頭依上述搜尋/命名原則補測試，安排在 Step 5 跑測試之前完成。
 - **若判定不寫自動化測試**：直接進入 Step 4，在 Step 6 驗收前的回報中清楚寫明原因；不要因為省事就默默跳過、也不要事後才臨時決定不寫。
@@ -112,7 +112,7 @@ description: Adjust an existing feature — update US, test strategy, implement,
 | Vitest | `npx vitest run {測試檔路徑}` |
 | Playwright | 依 `/e2e-test` skill 撰寫與執行（僅當 US 明確要求 E2E） |
 
-- 若有失敗，診斷原因並修正（程式碼或測試），直到全部通過。
+- 若有失敗，診斷原因並修正（程式碼或測試），直到全部通過。既有測試因本次調整變紅時先分辨：行為本來就該變 → 對照 US 更新期望值；行為沒變卻壞了 → 測試綁在實作上，依 reference-test-gate.md 改到 owner 邊界重寫，並在回報中列出。
 - 不要為了讓測試通過而降低測試覆蓋範圍或跳過斷言。
 - 檢查本次新增/修改的註解：只在 WHY 非顯而易見時才留，不解釋 WHAT，不引用當下任務/PR/呼叫端，不寫多段落說明；發現明顯贅述就直接精簡。
 

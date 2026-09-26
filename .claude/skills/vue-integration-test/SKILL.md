@@ -20,10 +20,12 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 - 要測哪個元件（路徑＋計算屬性／分支）？
 - 要覆蓋哪些情境？（對應 fixture 或 user story 的 Scenario）
-- 斷言哪幾層？
-  - **Computed 層**：直接讀 `wrapper.vm.xxx` — 穩定、易斷言，但偏實作細節。
-  - **DOM 層**：`wrapper.findAll('.some-class').length` 或 `wrapper.text()` — 最接近使用者實際看到的結果。
-  - **建議**：重要情境兩層都斷言，互為交叉驗證。
+- 斷言哪一層？
+  - **DOM 層（預設）**：`wrapper.findAll('.some-class').length`、`wrapper.text()`、`.emitted()` — 最接近使用者實際看到的結果。
+  - **Computed 層**：直接讀 `wrapper.vm.xxx` — 只有該 computed 本身就是要守護的契約（例如被多個元件共用的排序結果）時才用；否則它是只為測試存在的接縫，DOM 層已涵蓋同一件事。
+- 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單（特別留意「mock store 直接回傳算好的結果，再斷言畫面顯示它」）。
+
+**完成條件**：每個情境的四題都有具體答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
 
 ### 2. 命名與檔案位置
 
@@ -71,7 +73,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 8. Mutation Test（自我驗證）
 
-完成綠燈後，**把被測的核心邏輯反向破壞一次**（例如把排序改成升序），確認測試會紅。這步證明測試是在綁定邏輯而非 fixture 本身。改完記得還原並再跑一次確認回綠。
+完成綠燈後，**把被測的核心邏輯反向破壞一次**（例如把排序改成升序），確認測試會紅——實證把關第 2 題，證明測試綁定的是邏輯而非 fixture 本身。改完記得還原並再跑一次確認回綠。
 
 ### 9. 執行與整合
 

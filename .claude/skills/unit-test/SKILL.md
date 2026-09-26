@@ -49,6 +49,9 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 - 明確界定「被測單元」：一個函式、一個 composable/hook、一個 reducer/mutation——**不是**整個模組。
 - 列出這個單元的：輸入（含邊界值、非法值）、輸出（含錯誤/例外情況）、與外部的互動邊界（呼叫了哪些外部依賴，需要 stub/mock 掉）。
 - 若被測邏輯本身耦合了 DOM 或元件渲染，先評估是否該拆成「純邏輯 + 元件外殼」，再對純邏輯部分寫單元測試（元件外殼交給對應的 integration test skill）。
+- 對每個打算新增的情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單。
+
+**完成條件**：每個情境的四題都有具體答案，且未命中垃圾測試清單（或已用保留標準說明理由）；答不出的情境不寫。
 
 ### Step 2：命名與檔案位置
 
@@ -103,13 +106,14 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 
 ### Step 8：Mutation Test（自我驗證，選用但建議做一次）
 
-完成綠燈後，把被測邏輯反向破壞一次（例如把 `<` 改成 `<=`、拿掉一個條件分支），確認測試會變紅；證明測試真的綁定邏輯而非巧合通過。驗證完記得還原程式碼並再跑一次確認回綠。
+完成綠燈後，把被測邏輯反向破壞一次（例如把 `<` 改成 `<=`、拿掉一個條件分支），確認測試會變紅；這就是把關第 2 題「哪個回歸會讓它變紅」的實證。驗證完記得還原程式碼並再跑一次確認回綠。
 
 ---
 
 ## Checklist
 
 - [ ] 被測單元邊界清楚（純函式/composable/hook/reducer，不含 DOM 渲染）
+- [ ] 每個情境已通過 [reference-test-gate.md](reference-test-gate.md) 把關四題，未命中垃圾測試清單
 - [ ] 檔案位置與命名依專案既有慣例（預設 co-locate）
 - [ ] 每個測試符合 AAA 結構、只驗證一個行為，命名描述行為
 - [ ] Mock 使用最小必要替身，未過度 mock；網路請求優先用 MSW
@@ -135,3 +139,4 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 
 - Jest／Vitest 框架細節、設定、mocking 差異：[reference-framework.md](reference-framework.md)
 - 單元測試理論（FIRST、AAA、測試替身、測試金字塔、命名、mutation testing）：[reference-theory.md](reference-theory.md)
+- 測試該不該存在（把關四題、垃圾測試清單、保留標準、回歸測試）：[reference-test-gate.md](reference-test-gate.md)

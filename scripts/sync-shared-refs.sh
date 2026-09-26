@@ -1,38 +1,36 @@
 #!/usr/bin/env bash
-# Sync stack-detect.source.md into each consuming skill's local reference file.
-# Re-run after editing dev/shared/stack-detect.source.md; then verify with:
+# Sync dev/shared/*.source.md into each consuming skill's local reference file.
+# Re-run after editing a source; then verify with:
 #   ./scripts/sync-shared-refs.sh && git diff --exit-code
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/dev/shared/stack-detect.source.md"
 
-if [[ ! -f "$SRC" ]]; then
-  echo "Missing source: $SRC" >&2
-  exit 1
-fi
-
-HEADER=$'# GENERATED — do not edit the body by hand.\n# Source: dev/shared/stack-detect.source.md\n# Regenerate: ./scripts/sync-shared-refs.sh\n\n'
-
-# skill_dir:relative_output_path
-TARGETS=(
-  "feature:reference.md"
-  "adjust:reference.md"
-  "find-component-render-path:reference.md"
-  "quick-debug:reference.md"
-  "refactor:reference-stack.md"
-  "fix:reference-stack.md"
+# source_file|skill_dir:relative_output_path ...
+MAPPINGS=(
+  "stack-detect.source.md|feature:reference.md adjust:reference.md find-component-render-path:reference.md quick-debug:reference.md refactor:reference-stack.md fix:reference-stack.md"
+  "test-value-gate.source.md|unit-test:reference-test-gate.md vue-integration-test:reference-test-gate.md react-integration-test:reference-test-gate.md e2e-test:reference-test-gate.md fix:reference-test-gate.md adjust:reference-test-gate.md refactor:reference-test-gate.md test-audit:reference-test-gate.md"
 )
 
-BODY="$(cat "$SRC")"
-
-for entry in "${TARGETS[@]}"; do
-  skill="${entry%%:*}"
-  rel="${entry#*:}"
-  dest="$ROOT/.claude/skills/$skill/$rel"
-  mkdir -p "$(dirname "$dest")"
-  printf '%s%s\n' "$HEADER" "$BODY" > "$dest"
-  echo "wrote $dest"
+count=0
+for mapping in "${MAPPINGS[@]}"; do
+  src_name="${mapping%%|*}"
+  src="$ROOT/dev/shared/$src_name"
+  if [[ ! -f "$src" ]]; then
+    echo "Missing source: $src" >&2
+    exit 1
+  fi
+  header="# GENERATED — do not edit the body by hand."$'\n'"# Source: dev/shared/$src_name"$'\n'"# Regenerate: ./scripts/sync-shared-refs.sh"$'\n\n'
+  body="$(cat "$src")"
+  for entry in ${mapping#*|}; do
+    skill="${entry%%:*}"
+    rel="${entry#*:}"
+    dest="$ROOT/.claude/skills/$skill/$rel"
+    mkdir -p "$(dirname "$dest")"
+    printf '%s%s\n' "$header" "$body" > "$dest"
+    echo "wrote $dest"
+    count=$((count + 1))
+  done
 done
 
-echo "OK: synced ${#TARGETS[@]} files from $SRC"
+echo "OK: synced $count files"

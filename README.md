@@ -70,7 +70,7 @@ npx skills add ms0223900/agent-skills \
   --skill doc-trim --skill adjust --skill resolve-tracking-dir -y
 ```
 
-技術棧偵測（`reference.md` / `reference-stack.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust` 等**不需要**額外指令。維護端來源在 `dev/shared/stack-detect.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
+技術棧偵測（`reference.md` / `reference-stack.md`）與測試價值把關（`reference-test-gate.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust`／`unit-test` 等**不需要**額外指令。維護端來源在 `dev/shared/*.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
 
 ### User-invoked vs model-invoked
 
@@ -191,7 +191,8 @@ npx skills add ms0223900/agent-skills \
 │   └── reference-*.md
 └── ...
 dev/shared/
-└── stack-detect.source.md    # 維護端單一真相來源（非 skill）
+├── stack-detect.source.md    # 維護端單一真相來源（非 skill）
+└── test-value-gate.source.md # 測試把關四題／垃圾測試清單／保留標準
 scripts/
 └── sync-shared-refs.sh       # 把來源鋪進各 skill 的 reference*.md
 ```
