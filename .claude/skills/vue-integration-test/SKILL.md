@@ -5,7 +5,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 # Vue 2 Integration Test Workflow
 
-本專案 Vue 2 + Vuex 元件整合測試的撰寫指南，沿用本專案既有參考（`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`——僅參考其 fixture 與 describe 結構、`feature/SPRD-660` 分支之 `SPRD-660-high-precision.integration.test.js`）與 [@vue/test-utils v1 best practices](https://v1.test-utils.vuejs.org/)。
+本專案 Vue 2 + Vuex 元件整合測試的撰寫指南，沿用本專案既有參考（`tests/unit/components/MoreGame/SPRD-844-baseball-sorting.integration.test.js`、`feature/SPRD-660` 分支之 `SPRD-660-high-precision.integration.test.js`）與 [@vue/test-utils v1 best practices](https://v1.test-utils.vuejs.org/)。
 
 ## 何時使用
 
@@ -18,7 +18,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 1. 釐清測試目標
 
-- 要測哪個元件（路徑＋計算屬性／分支）？
+- 要測哪個元件（路徑＋要覆蓋的分支）？
 - 要覆蓋哪些情境？（對應 fixture 或 user story 的 Scenario）
 - 斷言使用者可觀察的輸出：`wrapper.findAll('[data-testid="row"]')`、`wrapper.text()`、`.attributes()`、`.emitted()`。排序、計算這類邏輯若值得單獨鎖住，抽成 util／getter 交給 `unit-test`。
 - 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單（特別留意「mock store 直接回傳算好的結果，再斷言畫面顯示它」）。
@@ -58,7 +58,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 6. 斷言撰寫建議（@vue/test-utils best practices）
 
-- 以「使用者可觀察的行為」為主：`wrapper.text()`、`findAll('.selector').length`、`.attributes()`、`.classes()`、`.emitted()`。
+- 以「使用者可觀察的行為」為主：`wrapper.text()`、`findAll('[data-testid="x"]')`、`.attributes()`、`.emitted()`；`.classes()` 只在 class 本身就是使用者看得到的狀態（例如 `is-active`）時用。
 - **Selector 選擇**：
   - 穩定：`data-testid`（推薦新增）、角色語意 class、元件 stub 名 `findComponent({ name: 'X' })`。
   - 易碎：動態 class、CSS 模組化 hash、index-based 存取。
@@ -71,7 +71,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 8. Mutation Test（自我驗證）
 
-完成綠燈後，**把被測的核心邏輯反向破壞一次**（例如把排序改成升序），確認測試會紅——實證把關第 2 題，證明測試綁定的是邏輯而非 fixture 本身。改完記得還原並再跑一次確認回綠。
+綠燈後依把關第 2 題做 mutation test（例如把排序改成升序），證明測試綁定的是邏輯而非 fixture 本身。
 
 ### 9. 執行與整合
 
@@ -88,7 +88,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ## 產出時的溝通
 
-1. 先說明：要覆蓋的元件路徑、情境、斷言層。
+1. 先說明：要覆蓋的元件路徑、情境、要斷言的使用者可觀察結果。
 2. 快速探 template（上游 `v-if`）與元件依賴（`$store.state.*`、`mapState`、`$SportLib` 等），決定 mock 範圍。
 3. 寫 test → 跑 → 依失敗訊息補 fixture 欄位（常見：`EvtStatus`、`Noshow`、`Status`）。
 4. 綠燈後做一次 mutation test 驗證，再還原。

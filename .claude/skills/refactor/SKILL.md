@@ -124,7 +124,7 @@ Clean Code：命名具語意、函式短小、避免巢狀過深、DRY。
 
 若任務檔案沒有這個欄位（純重構、無對應 US 流程）→ 維持既有慣例：重構前後跑一次既有測試確認沒有引入回歸即可，不強制新增測試。
 
-重構後有既有測試變紅時，依 [reference-test-gate.md](reference-test-gate.md)「既有測試變紅」分辨：重構不該改變行為，所以只會是回歸（修重構）或測試綁在實作上（改到 owner 邊界重寫）；在 Step 7 總結中列出改寫了哪些測試。
+重構後有既有測試變紅時，依 [reference-test-red.md](reference-test-red.md)「既有測試變紅」分辨後處理；在 Step 7 總結中列出改寫了哪些測試。
 
 ### Step 7: 驗證 / Validation
 

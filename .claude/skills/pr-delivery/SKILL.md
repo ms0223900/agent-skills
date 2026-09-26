@@ -1,6 +1,6 @@
 ---
 name: pr-delivery
-description: 將已完成的變更交付為 GitHub draft Pull Request，commit、push 並套用 PR 模板，禁止直推 main／master。使用時機：使用者說「幫我開 PR」「交付這次變更」「建立 pull request」，或 Cloud Agent 收尾。Reachable by /feature、/fix、/adjust、/refactor、/next-task（cloud 收尾）、/next-package（scaffold 與包尾）、/test-audit（使用者要求時）。
+description: 將已完成的變更交付為 GitHub draft Pull Request，commit、push 並套用 PR 模板，禁止直推 main／master。使用時機：使用者說「幫我開 PR」「交付這次變更」「建立 pull request」，或 Cloud Agent 收尾。Reachable by /feature、/fix、/adjust、/refactor、/next-task（cloud 收尾）、/next-package（scaffold 與包尾）、/test-audit。
 ---
 
 # PR 交付（PR Delivery）

@@ -65,7 +65,7 @@ npx skills add ms0223900/agent-skills \
 npx skills add ms0223900/agent-skills \
   --skill refactor-scan --skill resolve-tracking-dir --skill next-task --skill refactor --skill distill-playbook -y
 
-# test-audit（Step 5 會呼叫 independent-review，Step 6 交付走 change-report）
+# test-audit（沒有跨 skill 相對路徑，但 Step 5 以 slash 呼叫 independent-review、Step 6 交付走 change-report，建議一起裝）
 npx skills add ms0223900/agent-skills \
   --skill test-audit --skill independent-review --skill change-report -y
 
@@ -74,7 +74,7 @@ npx skills add ms0223900/agent-skills \
   --skill doc-trim --skill adjust --skill resolve-tracking-dir -y
 ```
 
-技術棧偵測（`reference.md` / `reference-stack.md`）與測試價值把關（`reference-test-gate.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust`／`unit-test` 等**不需要**額外指令。維護端來源在 `dev/shared/*.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
+技術棧偵測（`reference.md` / `reference-stack.md`）與測試把關（`reference-test-gate.md`、`reference-test-red.md`）已內嵌在各自 skill 資料夾內，單裝 `feature`／`fix`／`adjust`／`unit-test` 等**不需要**額外指令。維護端來源在 `dev/shared/*.source.md`，改完後執行 `./scripts/sync-shared-refs.sh`。
 
 ### User-invoked vs model-invoked
 
@@ -122,7 +122,7 @@ npx skills add ms0223900/agent-skills \
 | `react-integration-test` | React / Next 元件測試（RTL + user-event） |
 | `e2e-test` | E2E（Playwright，BDD / AC 驅動） |
 
-上述測試 skill 與 `feature`／`fix`／`adjust`／`refactor` 共用 `reference-test-gate.md`（把關四題、既有測試變紅的分辨、回歸測試須先紅、垃圾測試清單、保留標準）。稽核既有測試用 `/test-audit`（手動）。
+上述測試 skill、`feature`／`fix`／`adjust`／`refactor` 與 `test-audit` 共用 `reference-test-gate.md`（把關四題、垃圾測試清單、保留標準）；`feature`／`fix`／`adjust`／`refactor` 另有 `reference-test-red.md`（既有測試變紅的分辨、回歸測試須先紅）。稽核既有測試用 `/test-audit`（手動）。
 
 ### 環境／預覽
 
@@ -179,7 +179,7 @@ npx skills add ms0223900/agent-skills \
 .claude/skills/
 ├── feature/
 │   ├── SKILL.md
-│   └── reference.md          # synced from dev/shared
+│   └── reference*.md         # synced from dev/shared
 ├── wrap-up/SKILL.md
 ├── grill-me/SKILL.md
 ├── grilling/SKILL.md
@@ -199,7 +199,8 @@ npx skills add ms0223900/agent-skills \
 └── ...
 dev/shared/
 ├── stack-detect.source.md    # 維護端單一真相來源（非 skill）
-└── test-value-gate.source.md # 測試把關：四題、既有測試變紅、回歸測試、垃圾清單、保留標準
+├── test-value-gate.source.md # 測試把關：四題、垃圾清單、保留標準
+└── test-red-handling.source.md # 既有測試變紅、回歸測試、取得改動前的結果
 scripts/
 └── sync-shared-refs.sh       # 把來源鋪進各 skill 的 reference*.md
 ```

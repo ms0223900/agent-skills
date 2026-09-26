@@ -10,6 +10,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MAPPINGS=(
   "stack-detect.source.md|feature:reference.md adjust:reference.md find-component-render-path:reference.md quick-debug:reference.md refactor:reference-stack.md fix:reference-stack.md"
   "test-value-gate.source.md|feature:reference-test-gate.md unit-test:reference-test-gate.md vue-integration-test:reference-test-gate.md react-integration-test:reference-test-gate.md e2e-test:reference-test-gate.md fix:reference-test-gate.md adjust:reference-test-gate.md refactor:reference-test-gate.md test-audit:reference-test-gate.md"
+  "test-red-handling.source.md|feature:reference-test-red.md fix:reference-test-red.md adjust:reference-test-red.md refactor:reference-test-red.md"
 )
 
 count=0
@@ -20,7 +21,7 @@ for mapping in "${MAPPINGS[@]}"; do
     echo "Missing source: $src" >&2
     exit 1
   fi
-  header="# GENERATED — do not edit the body by hand."$'\n'"# Source: dev/shared/$src_name"$'\n'"# Regenerate: ./scripts/sync-shared-refs.sh"$'\n\n'
+  header="<!-- GENERATED — do not edit the body by hand."$'\n'"Source: dev/shared/$src_name"$'\n'"Regenerate: ./scripts/sync-shared-refs.sh -->"$'\n\n'
   body="$(cat "$src")"
   for entry in ${mapping#*|}; do
     skill="${entry%%:*}"

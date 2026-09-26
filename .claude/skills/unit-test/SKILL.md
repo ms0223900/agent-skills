@@ -106,7 +106,7 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 
 ### Step 8：Mutation Test（自我驗證）
 
-完成綠燈後，把被測邏輯反向破壞一次（例如把 `<` 改成 `<=`、拿掉一個條件分支），確認測試會變紅；這就是把關第 2 題「哪個回歸會讓它變紅」的實證。驗證完記得還原程式碼並再跑一次確認回綠。
+綠燈後依 [reference-test-gate.md](reference-test-gate.md) 把關第 2 題做 mutation test（例如把 `<` 改成 `<=`、拿掉一個條件分支），在回報中寫出破壞了什麼、是否變紅。
 
 ---
 
@@ -138,4 +138,4 @@ description: 撰寫框架無關的單元測試（純函式、utils、composables
 
 - Jest／Vitest 框架細節、設定、mocking 差異：[reference-framework.md](reference-framework.md)
 - 單元測試理論（FIRST、AAA、測試替身、測試金字塔、命名、mutation testing）：[reference-theory.md](reference-theory.md)
-- 測試該不該存在（把關四題、垃圾測試清單、保留標準、回歸測試）：[reference-test-gate.md](reference-test-gate.md)
+- 測試該不該存在（把關四題、垃圾測試清單、保留標準）：[reference-test-gate.md](reference-test-gate.md)

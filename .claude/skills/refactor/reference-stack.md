@@ -1,6 +1,6 @@
-# GENERATED — do not edit the body by hand.
-# Source: dev/shared/stack-detect.source.md
-# Regenerate: ./scripts/sync-shared-refs.sh
+<!-- GENERATED — do not edit the body by hand.
+Source: dev/shared/stack-detect.source.md
+Regenerate: ./scripts/sync-shared-refs.sh -->
 
 # 技術棧偵測
 
