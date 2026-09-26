@@ -22,10 +22,9 @@ description: Guides writing React / Next.js component tests with React Testing L
 - 測哪個元件（路徑＋要覆蓋的 props/互動分支）？
 - 覆蓋哪些情境？對應 fixture 或 user story 的 Scenario。
 - **核心原則：測行為，不測實作**——斷言使用者看得到/做得到的事（畫面文字、可互動元素，或傳入 `vi.fn()`／`jest.fn()` callback 後其是否以正確資料被呼叫），不斷言元件內部 state、hook 回傳值本身、或私有方法。
-- 試金石：整個重寫實作、輸入輸出不變時，這支測試應該完全不用改；要改就代表測到了實作細節。
 - 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單。
 
-**完成條件**：每個情境的四題都有具體答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
+**完成條件**：計畫或回覆中每個情境都有一行把關答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
 
 ### 2. 命名與檔案位置
 

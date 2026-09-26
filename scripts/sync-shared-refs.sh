@@ -9,7 +9,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # source_file|skill_dir:relative_output_path ...
 MAPPINGS=(
   "stack-detect.source.md|feature:reference.md adjust:reference.md find-component-render-path:reference.md quick-debug:reference.md refactor:reference-stack.md fix:reference-stack.md"
-  "test-value-gate.source.md|unit-test:reference-test-gate.md vue-integration-test:reference-test-gate.md react-integration-test:reference-test-gate.md e2e-test:reference-test-gate.md fix:reference-test-gate.md adjust:reference-test-gate.md refactor:reference-test-gate.md test-audit:reference-test-gate.md"
+  "test-value-gate.source.md|feature:reference-test-gate.md unit-test:reference-test-gate.md vue-integration-test:reference-test-gate.md react-integration-test:reference-test-gate.md e2e-test:reference-test-gate.md fix:reference-test-gate.md adjust:reference-test-gate.md refactor:reference-test-gate.md test-audit:reference-test-gate.md"
 )
 
 count=0

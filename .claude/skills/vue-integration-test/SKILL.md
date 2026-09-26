@@ -22,10 +22,10 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 - 要覆蓋哪些情境？（對應 fixture 或 user story 的 Scenario）
 - 斷言哪一層？
   - **DOM 層（預設）**：`wrapper.findAll('.some-class').length`、`wrapper.text()`、`.emitted()` — 最接近使用者實際看到的結果。
-  - **Computed 層**：直接讀 `wrapper.vm.xxx` — 只有該 computed 本身就是要守護的契約（例如被多個元件共用的排序結果）時才用；否則它是只為測試存在的接縫，DOM 層已涵蓋同一件事。
+  - **Computed 層**：直接讀 `wrapper.vm.xxx` 是斷言內部實作，DOM 層已涵蓋同一件事。排序、計算這類邏輯若值得單獨鎖住，抽成 util／getter 交給 `unit-test`，不在元件測試裡讀 `vm`。
 - 對每個情境過一次 [reference-test-gate.md](reference-test-gate.md) 的把關四題與垃圾測試清單（特別留意「mock store 直接回傳算好的結果，再斷言畫面顯示它」）。
 
-**完成條件**：每個情境的四題都有具體答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
+**完成條件**：計畫或回覆中每個情境都有一行把關答案，且未命中垃圾測試清單（或已用保留標準說明理由）。
 
 ### 2. 命名與檔案位置
 
@@ -42,6 +42,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 
 ### 4. Mock store 要點
 
+- mock 的是**輸入**（元件讀的原始 state／getter），受測的計算留在元件裡跑；getter 直接回傳該元件應算出的結果，就等於在測 mock。
 - **只塞元件實際讀到的欄位**。方法：`grep -n 'this\.\$store\.state\.'` 與 `mapState\|mapGetters` 找出依賴。
 - 每個 module 設定 `namespaced: true`（若專案慣例是 namespaced store）。
 - 若元件會 `commit` mutation：填入空函式 `mutations: { xxx() {} }`；若 `dispatch` action：填 `actions: { xxx: () => Promise.resolve() }`。

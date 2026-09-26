@@ -118,7 +118,7 @@ npx skills add ms0223900/agent-skills \
 | `react-integration-test` | React / Next 元件測試（RTL + user-event） |
 | `e2e-test` | E2E（Playwright，BDD / AC 驅動） |
 
-上述測試 skill 與 `fix`／`adjust`／`refactor` 共用 `reference-test-gate.md`（把關四題、垃圾測試清單、保留標準、回歸測試須先紅）。稽核既有測試用 `/test-audit`（手動）。
+上述測試 skill 與 `feature`／`fix`／`adjust`／`refactor` 共用 `reference-test-gate.md`（把關四題、既有測試變紅的分辨、回歸測試須先紅、垃圾測試清單、保留標準）。稽核既有測試用 `/test-audit`（手動）。
 
 ### 環境／預覽
 

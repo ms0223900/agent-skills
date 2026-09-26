@@ -6,23 +6,27 @@ disable-model-invocation: true
 
 # 測試稽核（Test Audit）
 
-用 [reference-test-gate.md](reference-test-gate.md) 這把尺稽核**既有**測試：找出垃圾測試、綁實作的測試、跨層重複的測試，以及只為測試而存在的 production 接縫。目標是**提高信心**，不是刪除數量——拿不準的候選一律保留。
+稽核**既有**測試：找出垃圾測試、綁實作的測試、跨層重複的測試，以及只為測試而存在的 production 接縫。目標是**提高信心**，不是刪除數量——拿不準的候選一律保留。
 
-流程分兩段：Step 1–3 **只讀不改**，產出證據報告；使用者確認後，Step 4–6 才一次清理一批。
+Step 0–3 **只讀不改**，產出證據報告；使用者確認後，Step 4–6 才一次清理一批。
 
 ## 範圍
 
-使用者呼叫時指定其一；沒指定就先問，不要自己挑：
+使用者呼叫時指定其一；沒指定就先問：
 
 - **路徑／glob**：一個目錄、模組或一組測試檔（例如 `src/modules/bet/`）。
 - **diff**：某分支相對 base 的改動（`git diff <base>...HEAD`），稽核其中新增／修改的測試。
 - **整個專案**：先列出模組清單與各自測試檔數，請使用者選第一批，一次只稽核一個模組。
 
-## Step 0：讀規範與偵測
+## Step 0：規範、指令與 baseline
 
-1. 讀 [reference-test-gate.md](reference-test-gate.md)（四題、垃圾測試清單、保留標準），之後每個判斷都以它為準。
-2. 讀根目錄與範圍內的 `AGENTS.md`／`CLAUDE.md`。
-3. 讀 `package.json` scripts 與 `jest.config.*`／`vitest.config.*`／`playwright.config.*`，記下單檔測試、lint、typecheck 的實際指令。
+1. 讀 [reference-test-gate.md](reference-test-gate.md)（把關四題、垃圾測試清單、保留標準），之後每個判斷都以它為準。
+2. 讀範圍內（含上層目錄）的 `AGENTS.md`／`CLAUDE.md`。
+3. 讀範圍所屬 package 的 `package.json` scripts（monorepo 讀該 package 的），以及 `jest.config.*`／`vitest.config.*`／`playwright.config.*` 與 CI 設定（`.github/workflows/`、`.gitlab-ci.yml` 等），記下：單檔測試、lint、typecheck、build 的實際指令，沒有的記「無」；哪些測試只在特定 jest project 或 CI job 裡跑。
+4. `git rev-parse --is-shallow-repository` 為 `true` 時先 `git fetch --unshallow`；失敗就記下「歷史不可得」。
+5. 跑一次 baseline：範圍內測試、lint、typecheck（有記下的才跑），記下原本就紅的測試與原本就有的錯誤。
+
+**完成條件**：四種指令都已記下（或「無」）、歷史是否可得已記下、baseline 紅燈與錯誤清單已記下。
 
 ## Step 1：探索（只讀）
 
@@ -38,29 +42,46 @@ disable-model-invocation: true
 
 ## Step 2：逐一蒐證
 
-判斷任一候選前，完整讀過：該測試、它覆蓋的 production owner 與進入點、呼叫端與被呼叫端、同類的兄弟實作、重疊的測試，以及 `git log -p` 找出這支測試或接縫當初為何加入。測試宣稱依賴第三方行為時，直接看該套件的型別或原始碼。
-
-每個候選填齊下表，**任一欄空白就不算可刪**，移到「待查」：
-
-| 欄位 | 內容 |
-|---|---|
-| 測試 | 檔案路徑 + `describe`／`it` 名稱 |
-| 實際能抓到的錯 | 這支測試真正會變紅的改動；抓不到任何可信回歸也要寫明 |
-| 非測試呼叫端 | 它覆蓋的 production 接縫有哪些非測試呼叫端（`grep` 結果） |
-| 更強的 owner 證明 | 哪支測試在 owner 邊界已守住同一件事；或為什麼不需要 |
-| 歷史 | 這支測試或接縫是為了什麼加入的 |
-| 連帶可刪 | 刪掉後能一併移除的測試專用 export、flag、wrapper、死碼 |
-| 風險與驗證指令 | 刪錯的後果，以及能證明沒刪錯的單檔測試指令 |
+判斷任一候選前，完整讀過：該測試、它覆蓋的 production owner 與進入點、呼叫端與被呼叫端、同類的兄弟實作、重疊的測試、它在 CI 的哪個 job 跑，以及 `git log -p` 找出這支測試或接縫當初為何加入。測試宣稱依賴第三方行為時，直接看該套件的型別或原始碼。
 
 再為每個候選判定處置：
 
 - **刪除**：證據齊全，且有更強的 owner 證明或本來就抓不到錯。
 - **改寫**：守護的契約是真的，但斷言綁在實作上 → 移到 owner 邊界重寫。
 - **合併**：近似重複 → 併進一個 `it.each`／table-driven case 或共用 fixture。
-- **保留（誤報）**：符合保留標準，寫出它獨立守護的契約。
-- **疑似產品 bug**：保留的測試在 baseline 上就紅 → 重現並回報，不刪。
+- **保留（誤報）**：符合保留標準；只需寫出它獨立守護的契約。
+- **疑似產品 bug**：Step 0 baseline 就紅的測試 → 重現並回報，留給使用者決定是否另開修正。
 
-**完成條件**：每個候選都有完整證據表與處置，或已移到「待查」並寫明缺哪一欄。
+刪除、改寫、合併的候選填齊下表。某欄確實不適用時寫「不適用：<原因>」；**空白就不算可處置**，移到「待查」：
+
+| 欄位 | 內容 |
+|---|---|
+| 測試 | 檔案路徑 + `describe`／`it` 名稱 |
+| 實際能抓到的錯 | 這支測試真正會變紅的改動；抓不到任何可信回歸也要寫明 |
+| 更強的 owner 證明 | 哪支測試在 owner 邊界已守住同一件事（寫出路徑與測試名）；或為什麼不需要 |
+| 歷史 | 這支測試或接縫是為了什麼加入的；「歷史不可得」時，上一欄必須是具體的測試 |
+| 連帶可刪 | 刪掉後能一併移除的 production 程式碼（export、flag、wrapper、死碼），每一項都附「呼叫端搜尋」結論；沒有就寫「不適用：只刪測試」 |
+| 風險與驗證指令 | 刪錯的後果，以及能證明沒刪錯的單檔測試指令 |
+
+### 呼叫端搜尋（列入「連帶可刪」前必做）
+
+刪 production 程式碼比刪測試危險得多：Vue／Nuxt／Next 有大量靠慣例或字串接起來的呼叫，單一 grep 找不到。每個要刪的 production 符號都要完成以下搜尋，範圍是**整個 repo**（排除 `node_modules`、建置輸出），不限稽核範圍：
+
+1. **所有名稱形式**：識別字原名、PascalCase、kebab-case（`<my-comp>`）、檔名去副檔名、相對與 alias 路徑（`@/…`、`~/…`）。
+2. **字串引用**：Vuex `dispatch`／`commit`／`mapActions`／`mapGetters`／`mapState` 的 `'module/name'`、事件名（`$emit('x')`、`@x`）、路由 `name`、i18n key、`provide`／`inject` key。
+3. **動態解析**：`require.context`、樣板字串的 `import(\`…${x}\`)`、以物件 key 或字串查表的元件註冊（`components[name]`）。
+4. **框架慣例入口**——位於這些位置的檔案或符號，一律視為有呼叫端：
+   - Vue 2：`Vue.component`／`Vue.mixin`／`Vue.directive`／`Vue.filter` 全域註冊、`Vue.prototype.$x` 或 plugin 注入的 `this.$x`、mixin 內的方法。
+   - Nuxt：`pages/`、`layouts/`、`middleware/`、`plugins/`、`store/`、`server/`，`components/`（`components: true` 或 Nuxt 3 預設自動註冊），Nuxt 3 自動匯入的 `composables/`、`utils/`，以及 `nuxt.config.*` 裡引用的模組。
+   - Next：`pages/`、`app/` 下的 `page`／`layout`／`route`／`loading`／`error`／`middleware` 檔，特殊 export（`default`、`metadata`、`generateMetadata`、`generateStaticParams`、`getServerSideProps`、`getStaticProps`、`GET`／`POST` 等）。
+   - 套件對外匯出：`package.json` 的 `main`／`module`／`exports`、`index` 的 re-export；設定檔（webpack／vite alias、`jest.config` 的 `moduleNameMapper`）。
+
+判定規則：
+
+- 以上任一項有非測試命中，或符號位於框架慣例入口，或專案存在第 3 項的動態解析而無法排除 → 這個符號**不列入「連帶可刪」**，只處置測試；在報告的「待查」註明原因。
+- 只有四項都查過且零命中，才能列入，並在報告中寫出實際跑過的搜尋指令。
+
+**完成條件**：每個候選都有處置；刪除、改寫、合併的候選證據表填齊（或已移到「待查」並寫明缺哪一欄）；「連帶可刪」的每一項都附呼叫端搜尋結論。
 
 ## Step 3：報告並等待確認
 
@@ -71,18 +92,20 @@ disable-model-invocation: true
 
 ### 摘要
 - 掃描 N 支測試檔；候選 M 個（刪除 a／改寫 b／合併 c／保留 d／疑似 bug e）；待查 f 個
+- baseline：<原本就紅的測試與錯誤，或「全綠」>
 
 ### 建議批次
-1. <批次名：一個 owner 邊界／模組> — 候選 #1, #3, #4；預估測試 -X 行、production -Y 行
+1. <批次名：一個 owner 邊界／模組> — 候選 #1, #3, #4；預估測試 -X 行
+   - production 刪除（需另外確認）：<符號與檔案>，或「無」
 
 ### 候選明細
 #### #1 <檔案> › <測試名>
 - 命中：<垃圾測試條目>
 - 處置：刪除／改寫／合併／保留／疑似 bug
-- <證據表各欄>
+- <證據表各欄；保留只寫守護的契約>
 
 ### 待查
-- <候選>：缺 <欄位>，需要 <什麼資訊>
+- <候選或 production 符號>：缺 <欄位> 或 <呼叫端無法排除的原因>
 ```
 
 使用者只要報告時，到此結束。
@@ -91,31 +114,31 @@ disable-model-invocation: true
 
 一次只做**一個**使用者確認的批次（同一個 owner 邊界或模組）：
 
-- 依處置刪除、改寫或合併；刪測試時一併刪掉「連帶可刪」列出的測試專用 export、global、wrapper 與死碼，不留相容別名。
-- 保留下來的回歸測試搬到它的 owner 邊界。
-- 改寫只做到能斷言可觀察結果為止，不另寫一支換湯不換藥、重述同一實作的替代測試。
-- 動手前確認沒有 watch 模式的測試 runner 正在這個 checkout 上跑。
+- 依處置刪除、改寫或合併測試。
+- production 程式碼只刪使用者在報告中**明確確認過**的「連帶可刪」項目，不留相容別名。
+- 改寫後的測試依把關四題寫，並做一次 mutation test：反向破壞受測邏輯確認它會紅，再還原。
 
-**完成條件**：批次內每個候選都已照處置落地，或已註明為何改成保留。
+**完成條件**：批次內每個候選都已照處置落地，或已註明為何改成保留；每支改寫的測試都做過 mutation test。
 
 ## Step 5：驗證
 
-1. 跑受影響的 owner 與兄弟測試（Step 0 記下的單檔指令）。
+1. 跑受影響的 owner 與兄弟測試，以及 Step 0 記下的 lint、typecheck（有記下的才跑）。
 2. 移除的是原始碼 grep 或設定比對類測試時，改跑真正擁有該契約的指令（`build`、產生器腳本、dry-run）。
-3. 跑 lint 與 typecheck，再跑 `git diff --check`。
-4. 看 `git diff --numstat`，把 production／工具與測試／測試輔助分開統計。
+3. 刪了 production 程式碼時，跑 build（有記下的話）。build 抓不到全域註冊、字串 dispatch 這類執行期才解析的引用，這部分以 Step 2 的呼叫端搜尋為準。
+4. 跑 `git diff HEAD --check`。
+5. 對這批改動執行 `/independent-review`，處理它回報的問題。
 
-**完成條件**：以上指令都跑過且通過；有失敗就回到 Step 4 修正，不要把失敗的測試一起刪掉。
+**完成條件**：和 Step 0 的 baseline 相比沒有新增的紅燈或錯誤，`/independent-review` 回報已處理；有新增失敗就回到 Step 4 修正，失敗的測試保留不刪。
 
 ## Step 6：回報與下一批
 
-回報：
+用 `git diff HEAD --numstat` 統計行數（含已暫存的刪除），production／工具與測試／測試輔助分開列。回報：
 
 - 移除了哪幾類低價值測試、根因是什麼
 - production owner 的簡化（刪掉的 export、死碼）
 - 保留的誤報與它們的價值
 - 實際跑過的驗證指令與結果
-- production 與測試的行數增減（分開列）
+- production 與測試的行數增減
 - 下一批建議
 
-交付照常走 `/change-report`；使用者要求開 PR 時再用 `/pr-delivery`。下一批開始前，從最新的 base 重新跑 Step 1 探索，不要沿用舊報告。
+交付照常走 `/change-report`；使用者要求開 PR 時再用 `/pr-delivery`。下一批以目前的工作樹重新走 Step 1–3，產出新報告並等待確認。
