@@ -24,7 +24,7 @@ Step 0–3 **不改工作樹**，產出證據報告；使用者確認後，Step 
 2. 讀範圍內（含上層目錄）的 `AGENTS.md`／`CLAUDE.md`。
 3. 讀範圍所屬 package 的 `package.json` scripts（monorepo 讀該 package 的），以及 `jest.config.*`／`vitest.config.*`／`playwright.config.*` 與 CI 設定（`.github/workflows/`、`.gitlab-ci.yml` 等）。
 4. `git rev-parse --is-shallow-repository` 為 `true` 時先 `git fetch --unshallow`；失敗就記下「歷史不可得」。
-5. 跑一次 baseline：範圍內測試、lint、typecheck、build（有指令的才跑）。本 skill 裡所有 Jest／Vitest 執行都加 `--ci`，避免自動寫入 snapshot。
+5. 跑一次 baseline：範圍內測試、lint、typecheck、build（有指令的才跑）。本 skill 裡跑測試一律不寫入 snapshot、不進 watch：Jest 用 `npx jest --ci`，Vitest 用 `CI=true npx vitest run`。
 
 **完成條件**：以下都已記下——單檔測試、lint、typecheck、build 的指令（沒有的寫「無」）；只在特定 jest project 或 CI job 裡跑的測試；歷史是否可得；baseline 原本就紅的測試與原本就有的錯誤。
 
@@ -103,7 +103,7 @@ Step 0–3 **不改工作樹**，產出證據報告；使用者確認後，Step 
 
 - 依處置刪除、改寫或合併測試。
 - production 符號只刪使用者**逐項勾選確認**的項目，不留相容別名；依呼叫端搜尋第 6 節一併清掉測試端引用。
-- 改寫與合併後的測試依把關四題寫，並做一次 mutation test：反向破壞受測邏輯確認它會紅（合併的每一列都要紅過），再還原。
+- 改寫與合併後的測試依把關四題寫，並依把關第 2 題做 mutation test；合併時，被併入的每個原測試所守的受測邏輯都要破壞過。
 
 **完成條件**：批次內每個候選都已照處置落地，或已註明為何改成保留；每支改寫與合併的測試都做過 mutation test。
 
@@ -112,7 +112,7 @@ Step 0–3 **不改工作樹**，產出證據報告；使用者確認後，Step 
 1. 跑受影響的 owner 與兄弟測試、呼叫端搜尋第 6 節列出的測試檔，以及 Step 0 記下的 lint、typecheck。
 2. 移除的是原始碼 grep 或設定比對類測試時，改跑真正擁有該契約的指令（`build`、產生器腳本、dry-run）。
 3. 刪了 production 符號時跑 build。build 抓不到全域註冊、字串 dispatch 這類執行期才解析的引用，這部分以呼叫端搜尋為準。
-4. 範圍外的測試失敗、而 Step 0 沒有它的 baseline 時：記下 `git stash list | wc -l`，`git stash push -u -m test-audit-<時間戳>` 收起整批改動，確認筆數多一筆後跑同一支測試，再 `git stash pop --index`。只有同一條斷言、同樣的失敗訊息才算原本就紅；找不到模組或設定錯誤不算。
+4. 範圍外的測試失敗、而 Step 0 沒有它的 baseline 時：記下 `git stash list | wc -l`，`git stash push -u -m test-audit-<時間戳> -- <本批改動的檔案>` 只收起這批改動，確認筆數多一筆後跑同一支測試，再 `git stash pop --index`（pop 失敗時不要 drop，先移開衝突檔案再重試）。只有同一條斷言、同樣的失敗訊息才算原本就紅；找不到模組或設定錯誤不算。
 5. 跑 `git diff HEAD --check`。
 6. 對這批改動執行 `/independent-review`，交給它被刪或合併的斷言清單與候選 owner 測試的路徑（不附結論），請它逐條判斷是否仍有測試守住，並找出改寫後永遠不會紅的斷言。處理它回報的問題。
 
@@ -120,7 +120,7 @@ Step 0–3 **不改工作樹**，產出證據報告；使用者確認後，Step 
 
 ## Step 6：回報與下一批
 
-先 `git add -N` 新增的檔案，再用 `git diff HEAD --numstat` 統計行數，production／工具與測試／測試輔助分開列。回報：
+先 `git add -N` 新增的檔案，用 `git diff HEAD --numstat` 統計行數，再 `git reset --quiet -- <新增的檔案>` 撤回 intent-to-add；production／工具與測試／測試輔助分開列。回報：
 
 - 移除了哪幾類低價值測試、根因是什麼
 - production owner 的簡化（刪掉的 export、死碼）

@@ -38,11 +38,11 @@
   1. 記下 `git stash list | wc -l` 的筆數。
   2. `git stash push -u -m <唯一名稱> -- <本次改動的所有產品檔>`（產品檔要列齊，只收一部分會造成 import 錯誤，看起來像改動前也紅）。
   3. 筆數多了一筆才繼續；沒多就代表沒收到任何改動，停下，不要 pop。
-  4. 跑測試（Jest／Vitest 加 `--ci`，避免在舊產品碼上寫入新 snapshot）。
-  5. `git stash pop --index`。
+  4. 跑測試，不寫入 snapshot、不進 watch：Jest 用 `npx jest --ci <檔案>`，Vitest 用 `CI=true npx vitest run <檔案>`。
+  5. `git stash pop --index`。pop 失敗時不要 `drop`：stash 會保留，先移開衝突的檔案（例如測試產生的同名檔）再重試。
 - **改動已經 commit**：
   1. `git worktree add <暫存目錄> <改動前的 commit>`。
   2. 在暫存目錄補齊執行環境：symlink 或安裝 `node_modules`、複製 `.env*`、跑專案的 prepare（例如 `nuxi prepare`）。
-  3. 把目前的測試檔與它用到的 fixture、helper 複製進去，用 `--ci` 跑。
+  3. 把目前的測試檔與它用到的 fixture、helper，以及同一批改動裡改過的測試設定（`jest.config`／`vitest.config`、setup 檔）複製進去，照上一段第 4 步的指令跑。
   4. `git worktree remove --force <暫存目錄>`。
-- 只有**同一條斷言、同樣的失敗訊息**才算「改動前也紅」；找不到模組、設定錯誤、環境缺漏都不算，要先把環境補齊再跑。
+- 跑出來的結果只有在測試真的執行到斷言時才能當證據；找不到模組、設定錯誤、環境缺漏的結果不算，先補齊環境再跑。

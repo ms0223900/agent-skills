@@ -30,6 +30,7 @@
 | 組名的 store 呼叫 | `` dispatch(`bet/fetch${type}Odds`) ``、`commit(name)`、`store.getters[key]` |
 | 批次載入 | `require.context`、`import.meta.glob`、`import.meta.webpackContext`、`` import(`./x/${name}`) `` |
 | 查表註冊 | `components[name]`、`Object.keys(x).forEach(k => Vue.component(k, x[k]))` |
+| 動態元件 | `` <component :is="`Icon${type}`"> ``、`:is="name"`、`resolveComponent(name)` |
 
 判定：
 
@@ -65,6 +66,7 @@ app 內的 barrel 以 `export { x } from './x'` 具名轉出時不算整包使�
   - `app/` 下的 `page`、`layout`、`template`、`loading`、`error`、`global-error`、`not-found`、`global-not-found`、`forbidden`、`unauthorized`、`default`、`route`，以及 metadata 檔（`sitemap`、`robots`、`manifest`、`icon`、`apple-icon`、`opengraph-image`、`twitter-image`）。
   - `pages/` 下每個檔案（含 `_app`、`_document`、`api/`）。
   - 以上清單依當時的框架版本會有新增；檔名看起來像框架慣例、而這份清單沒列時，視為慣例檔。
+- **全域元件目錄**：Nuxt 3／4 的 `components/global/`、`*.global.vue`，以及 `components` 設定裡 `global: true` 的目錄（Nuxt 2 同）。這些元件能被字串組名解析，不適用 5b。
 - **全域註冊與注入**：Vue 2 的 `Vue.component`／`Vue.directive`／`Vue.filter`、`Vue.prototype.$x`；Vue 3 的 `app.component`／`app.directive`／`app.provide`、`app.config.globalProperties.$x`；plugin 注入的 `this.$x`。（迴圈註冊的例外見第 4 節。）
 - **其他**：微前端入口的生命週期 export（qiankun 的 `bootstrap`／`mount`／`unmount` 等）、Module Federation 的 `exposes`、`package.json` 的 `main`／`module`／`exports`／`bin` 指向的檔案與它轉出的符號、webpack／vite 中**指向單一檔案**的 `alias`、`ProvidePlugin`。
 
@@ -74,8 +76,8 @@ app 內的 barrel 以 `export { x } from './x'` 具名轉出時不算整包使�
 
 | 來源 | 目錄 | 補充搜尋 |
 |---|---|---|
-| 元件自動註冊 | Nuxt 2（`components: true`）與 Nuxt 3／4 的 `components/`、`components.dirs` 自訂目錄、`unplugin-vue-components` | 帶目錄前綴的名稱（`components/bet/LegacyCard.vue` → `BetLegacyCard`、`bet-legacy-card`）、`Lazy` 前綴名、`resolveComponent('…')`、`#components` |
-| 自動匯入 | Nuxt 3／4 的 `composables/`、`utils/`、`shared/`、`server/utils/`、`imports.dirs` 自訂目錄、Pinia `stores/`（或 `storesDirs`）、`unplugin-auto-import` | 在 `.vue`（template 與 script）、`.ts`、`.js` 裡搜裸名稱；`from '#imports'`；`nuxt.config` 的 `imports.presets` |
+| 元件自動註冊 | Nuxt 2（`components: true`）與 Nuxt 3／4 的 `components/`、`components.dirs` 自訂目錄、`unplugin-vue-components` | 註冊後的名稱：預設帶目錄前綴（`components/bet/LegacyCard.vue` → `BetLegacyCard`、`bet-legacy-card`），重複的段會合併（`components/base/BaseButton.vue` → `BaseButton`），`prefix`／`pathPrefix: false` 設定會改變名稱——三種都拿不準時連同檔名本身都搜；另搜 `Lazy` 前綴名、`resolveComponent('…')`、`#components` |
+| 自動匯入 | Nuxt 3／4 的 `composables/`、`utils/`、`shared/`、`server/utils/`、`imports.dirs` 自訂目錄、Pinia `stores/`（或 `storesDirs`）、`unplugin-auto-import` | 在 `.vue`（template 與 script）、`.ts`、`.tsx`、`.js`、`.jsx`、`.mjs`、`.cjs` 裡搜裸名稱；`from '#imports'`；`nuxt.config` 的 `imports.presets` |
 
 補充搜尋全部零命中，且 1–4 節也都能排除 → 可排除。任一命中 → 無法排除。
 
@@ -88,7 +90,7 @@ mixin 或 `extends` 提供的方法：先找出所有混入它的元件（含 `V
 列出所有引用目標檔案的測試端位置：`import`、`jest.mock('…')`／`vi.mock('…')` 的路徑、`__mocks__/` 同名檔、`jest.config` 的 `moduleNameMapper` 項目。這一節不影響可不可刪，但決定清理範圍：
 
 - import 目標符號的每一支測試，都必須在同一批裡被刪除或改寫成不再依賴它；有任何一支不在這批，目標符號改判「待查」。
-- 判「可刪」時，mock 路徑、`__mocks__/`、`moduleNameMapper` 項目在 Step 4 一併清掉，相關測試在 Step 5 全部跑過。
+- 判「可刪」時，在 Step 4 清掉測試端對該符號的引用：整個檔案被刪才移除 `jest.mock`／`vi.mock`、`__mocks__/` 同名檔與 `moduleNameMapper` 項目；檔案還留著時只移除 mock 裡該符號的部分。相關測試在 Step 5 全部跑過。
 
 ## 判定與紀錄
 

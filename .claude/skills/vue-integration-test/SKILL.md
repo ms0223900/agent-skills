@@ -91,7 +91,7 @@ description: Guides writing Vue 2 component integration tests with @vue/test-uti
 1. 先說明：要覆蓋的元件路徑、情境、要斷言的使用者可觀察結果。
 2. 快速探 template（上游 `v-if`）與元件依賴（`$store.state.*`、`mapState`、`$SportLib` 等），決定 mock 範圍。
 3. 寫 test → 跑 → 依失敗訊息補 fixture 欄位（常見：`EvtStatus`、`Noshow`、`Status`）。
-4. 綠燈後做一次 mutation test 驗證，再還原。
+4. 綠燈後依把關第 2 題做 mutation test。
 5. 最後回報：測試檔位置、通過數、mutation test 結果、發現的關鍵門檻（供其他測試撰寫者參考）。
 
 ## 參考實例

@@ -108,7 +108,7 @@ Client Component 與一般 React 元件測試方式相同；Server Component（a
 1. 先說明：要覆蓋的元件路徑、情境、要斷言的使用者行為。
 2. 快速確認元件依賴的 Provider/Context/Store/API，決定要包哪些真實 Provider、要用 MSW mock 哪些 endpoint。
 3. 寫 test → 跑 → 依失敗訊息補齊 fixture/handler。
-4. 綠燈後做一次 mutation test 驗證，再還原。
+4. 綠燈後依把關第 2 題做 mutation test。
 5. 最後回報：測試檔位置、通過數、mutation test 結果。
 
 ## 參考資源
