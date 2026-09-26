@@ -10,6 +10,7 @@ disable-model-invocation: true
 
 - 註解太長太贅述 → `/comment-trim`
 - US/spec/playbook 文件太囉唆 → `/doc-trim`
+- 測試寫太多、太綁實作或跨層重複，想稽核清理 → `/test-audit`
 - 要把經驗整併進 Playbook/Skill/CLAUDE.md → `/distill-playbook`
 - 要整理本週分支週報 → `/weekly-branch-report`
 - 想知道合進主幹會不會衝突 → `/merge-conflict-check`
@@ -18,6 +19,7 @@ disable-model-invocation: true
 
 Comments taking too long, too verbose → `/comment-trim`.
 Docs (US/spec/playbook) too wordy → `/doc-trim`.
+Tests low-value, implementation-coupled or duplicated → `/test-audit`.
 Consolidate learnings into Playbook/Skill/CLAUDE.md → `/distill-playbook`.
 Weekly branch report → `/weekly-branch-report`.
 Check merge conflicts with base branch → `/merge-conflict-check`.

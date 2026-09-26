@@ -118,6 +118,8 @@ npx skills add ms0223900/agent-skills \
 | `react-integration-test` | React / Next 元件測試（RTL + user-event） |
 | `e2e-test` | E2E（Playwright，BDD / AC 驅動） |
 
+上述測試 skill 與 `fix`／`adjust`／`refactor` 共用 `reference-test-gate.md`（把關四題、垃圾測試清單、保留標準、回歸測試須先紅）。稽核既有測試用 `/test-audit`（手動）。
+
 ### 環境／預覽
 
 | Skill | 說明 |
@@ -161,6 +163,7 @@ npx skills add ms0223900/agent-skills \
 | `wrap-up` **（手動）** | Router：列出下方收尾類 skill 與何時用（含上線前 `/security-audit`），本身不執行 |
 | `comment-trim` **（手動）** | 精簡功能開發期間累積的贅述註解 |
 | `doc-trim` **（手動）** | 精簡 US / spec / playbook 敘述文字（保留結構） |
+| `test-audit` **（手動）** | 稽核既有測試（路徑／diff／整個專案），附證據找出低價值、綁實作、重複的測試，確認後分批清理 |
 | `distill-playbook` **（手動）** | 把 epic/feature 驗收經驗蒸餾進 Playbook / Skill |
 | `weekly-branch-report` **（手動）** | 依作者與日期整理「已合併 uat / 進行中」分支週報 |
 
