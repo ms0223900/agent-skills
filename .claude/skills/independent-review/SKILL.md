@@ -76,7 +76,7 @@ description: 對指定標的（plan、未 commit 變更、commit range、一組�
 
   1. **程式碼查證**：spec 提到的模組/API/欄位是否真的存在、行為是否與 spec 假設相符；需求範圍內是否已有既有 bug、資料狀態或設計限制，會導致照 spec 實作完 AC 仍無法驗收；以及其他跟這次需求沒有直接依賴、但盤點過程中發現的問題。這層用 P0／P1／P2。
   2. **需求文字檢查**（檢查句子是否寫得完，不檢查程式做完沒有）：
-     - 覆蓋：每個 `MVP: true`（或未標 MVP）的 Story 有功能細節，以及正向、錯誤、邊界 AC。`MVP: false` 缺項最多 SUGGESTION，不得標 CRITICAL
+     - 覆蓋：每個 `MVP: true`（或未標 MVP）的 Story 有功能細節，以及正向、錯誤、邊界 AC。某一類 AC 已在第 6 節標明尚未定案時，缺的是那一類就標 IMPORTANT，不得標 CRITICAL；正向 AC 仍必須有。`MVP: false` 缺項最多 SUGGESTION，不得標 CRITICAL
      - 一致：用詞、狀態、欄位前後相同
      - 範圍：沒有超出原始 ticket
      - 可衡量：沒有無法判定完成的動詞
