@@ -278,5 +278,5 @@ Step 11 完成後**額外**執行：
 - [ ] 高風險（付款、權益、Webhook、狀態機、RLS）才有 `FR-` 編號與「狀態與權威來源」；其他規格沒有這兩項
 - [ ] 資料／API：已給定義，或已寫明「本次無資料層變動」及理由
 - [ ] Step 10：已執行 IR，或符合窄條件略過／不重跑並已註明；新建 vs 既有模組未誤報
-- [ ] Step 11：阻塞／弱相關／無發現分流正確；CRITICAL 與會擋 AC 的程式 P0 進第 7 節，AC 只加阻塞註記、不改預期結果；IMPORTANT 只進第 6 節灰區；SUGGESTION／NIT 未改檔；`-issues.md` 命名正確
-- [ ] Step 13：有 CRITICAL 或會擋 AC 的程式阻塞時判定「須先補規格」；否則才導向 `/user-stories`。研究類已做 Step 12，且不因本項導向 `/user-stories`
+- [ ] Step 11：阻塞／弱相關／無發現分流正確；CRITICAL、會擋 AC 的程式 P0、需人工確認進第 7 節。只有「某一條 AC 無法驗收」才加阻塞註記，且不改預期結果；範圍超出 ticket 不加該註記。IMPORTANT 只進第 6 節灰區；SUGGESTION／NIT 未改檔；`-issues.md` 命名正確
+- [ ] Step 13：有第 7 節未解除項時判定「須先補規格」，使用者接受後才寫回並重跑 Step 10；否則開發類才導向 `/user-stories`。研究類已做 Step 12，有阻塞時先補規格，且不因此導向 `/user-stories`
