@@ -238,7 +238,7 @@ Step 11 完成後**額外**執行：
   - 僅措辭／排版、無實質變更 → 見 Step 10「可不重跑 IR」；仍應覆寫主 spec 本文，並遵守輸出限制勿堆舊版鋪陳。
 
 - **獨立審查後更新（Step 10/11）**
-  - **強相關（阻塞）**：改寫主 spec，補第 7 節與對應 AC 註記，**不建新檔**。
+  - **強相關（阻塞）**：補第 7 節，並在對應 AC 加一行阻塞註記（不改該 AC 的預期結果），**不建新檔**。
   - **弱相關（非阻塞）**：另存「盤點問題」檔，主 spec 檔名加 `-issues`（JIRA：`<ISSUE_KEY>-<short-slug>-issues.md`；非 JIRA：`<原檔名去除副檔名>-issues.md`）。**完整內容模板見 [reference-output.md](reference-output.md) 第二節**——寫這份檔案前先讀該節。主 spec 在第 6 節或新增第 7 節末端加一行連結。
   - 兩者皆無 → 不建 `-issues.md`、不新增第 7 節，維持第 0～6 節。
   - **注意**：`-issues.md` 不是主規格；下游 `next-task` 解析 `docs/specs/{KEY}-*.md` 時應排除 `*-issues.md`（見該 skill）。
