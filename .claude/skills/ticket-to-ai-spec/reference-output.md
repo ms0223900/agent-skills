@@ -15,10 +15,15 @@
    - Goal: ...
    - Impacted Areas: ...
    - Stakeholders: ...
+   - Assumptions:
+     - [已確認] ...
+     - [由 ticket 或程式碼推得] ...
+     - [仍需確認] ...（不寫進 AC；沒有假設時此小節只寫「無」）
 
 1. 核心 User Story (Core User Stories)
 
-   - 列出 1~N 條 User Story：
+   - 能力圖（僅兩個以上可獨立驗收的能力時才寫；每項一行：名稱、邊界、依賴、撰寫順序）
+   - 列出 1~N 條 User Story（高風險規格才加 `FR-1` 這類編號）：
      - As a ...
      - As a ...
 
@@ -42,6 +47,7 @@
    - API & Permissions:
    - External Services:
    - Performance / SLO:
+   - 狀態與權威來源:（僅付款、權益、Webhook、狀態機、RLS）
 
 5. MVP 判定 (MVP vs Later)
 
@@ -60,8 +66,10 @@
 7. ⚠️ 需求前置阻塞問題 (Blocking Issues from Independent Review)（僅 Step 11 判定有強相關問題時才新增此節）
 
    - 問題 1：[標題]
+     - 等級：CRITICAL、會擋 AC 的 P0，或「需人工確認」
      - 證據：`path/to/file` 行號 / 具體說明
-     - 影響：擋住哪一條 AC（對應 Story/Scenario）
+     - 影響：擋住哪一條 AC（Story / Scenario）；若是範圍超出 ticket，改寫「範圍與 ticket 不符」並列出 Story
+     - 替換句：（可改寫時才寫；使用者接受前不寫回第 1～5 節）
    - （若有其他非阻塞問題被拆到獨立檔案）另見：`<spec 檔名>-issues.md`
 ```
 
@@ -99,8 +107,9 @@ Step 11 判定為弱相關（不影響本次驗收）時，另存「盤點問題
 
 依前述 Workflow 輸出類似結構（實際需更完整；以下為合規範例，**勿**把模糊動詞或未在 Ticket 出現的數字寫進規格）：
 
-- Context／Impacted Areas：checkout 頁、付款確認 API、訂單狀態、第三方支付整合點。
-- 核心 User Story：玩家希望可以使用 Apple Pay 完成結帳，以便縮短結帳等待時間。
+- Context／Impacted Areas：checkout 頁、付款確認 API、訂單狀態、第三方支付整合點。Assumptions 用「已確認／由 ticket 或程式碼推得／仍需確認」標示；沒有則寫「無」。
+- 能力圖（此例有兩件可獨立驗收的能力）：Apple Pay 結帳 — 授權與訂單狀態；無依賴；先寫。付款確認查詢 — 只含確認路徑；依賴訂單狀態欄位已存在；後寫。
+- 核心 User Story：兩件都屬付款，各自編號，例如 `FR-1` 玩家以 Apple Pay 完成結帳。技術邊界寫「狀態與權威來源」。付款確認查詢另立 Story 並標 `MVP: true/false`。
 - 功能細節：新增 Apple Pay 支付流程、授權成功後將訂單狀態更新為 `PAID`、寫入交易紀錄；針對付款確認路徑的查詢列出具體調整建議（例如候選 index／查詢條件），未核准前不改 schema。
 - 驗收標準：Given 使用者在 checkout 頁面選擇 Apple Pay，When 授權成功，Then 訂單狀態為 `PAID` 且導向成功頁（如 `/dashboard`）。另補錯誤與邊界（授權失敗、重複提交等）。
 - 技術邊界：需與第三方支付供應商整合；DB index 是否調整標「可能需要討論」。效能數字若 Ticket 未給，標「缺少效能指標」，勿杜撰。
