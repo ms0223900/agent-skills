@@ -57,6 +57,7 @@ description: Adjust an existing feature — update US, test strategy, implement,
 
 **優先級**：P0 / P1 / P2
 **相關功能**：...
+**來源**：Story A / Scenario 2（或 `FR-1`）
 ```
 
 - 存檔路徑：寫入 Step 1 選定的追蹤目錄（`US-0X-{slug}.md`）；序號接續現有最大編號。
