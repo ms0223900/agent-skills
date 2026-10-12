@@ -1,6 +1,6 @@
 ---
 name: next-package
-description: Package related unfinished US and loop /next-task. Cloud or 同一 PR: one draft. Use when the user wants 整包 or 同一 PR.
+description: "Package related unfinished US and loop /next-task. Cloud or 同一 PR: one draft. Use when the user wants 整包 or 同一 PR."
 ---
 
 # Next Package
